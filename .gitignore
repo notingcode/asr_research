@@ -1,0 +1,10 @@
+__pycache__
+.conda
+.vscode
+metadata_base
+metadata_disabled
+base
+test
+*.txt
+base.model
+base.vocab
