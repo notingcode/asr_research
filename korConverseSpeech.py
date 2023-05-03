@@ -1,80 +1,71 @@
 import os
+import multiprocessing as mp
 from pathlib import Path
 from typing import Tuple, Union
 
 from torch import Tensor
-from torch.hub import download_url_to_file
 from torch.utils.data import Dataset
 from untar_unzip import _extract_tar, _load_waveform
 from train_spm_base import cleanup_transcript
 
-N_DIRECTORIES_STRIPPED = 6
+N_DIRECTORIES_STRIPPED = 9
 SAMPLE_RATE = 16000
-
 _DATA_SUBSETS = [
     "broadcast",
     "hobby",
     "dialog",
     "life",
-    "life",
     "weather",
     "economy",
     "play",
     "shopping",
+    "all"
 ]
 
 
-def _unpack_korConverseSpeech(source_path, subset_type):
+def _unpack_korConverseSpeech(source_path, subset_type: str):
     ext_archive = ".tar"
     
-    tar_files = Path(source_path).glob(f"*/*_{subset_type}_*{ext_archive}")
+    assert(subset_type in _DATA_SUBSETS)
+    
+    if subset_type is "all":
+        tar_files = Path(source_path).glob(f"*/*{ext_archive}")
+    else:
+        tar_files = Path(source_path).glob(f"*/*_{subset_type}_*{ext_archive}")
+    
+    args = []
     
     for file in tar_files:
         file.with_suffix("").mkdir(exist_ok=True)
-        _extract_tar(from_path=file.as_posix(), to_path=file.with_suffix("").as_posix(), n_directories_stripped=N_DIRECTORIES_STRIPPED)
+        args.append((file.as_posix(), file.with_suffix("").as_posix(), N_DIRECTORIES_STRIPPED))
+    
+    pool = mp.Pool(min(mp.cpu_count(), len(args)))
+    
+    pool.starmap(_extract_tar, args, chunksize=1)
 
 
 def _get_korConverseSpeech_metadata(
-    fileid: str, root: str, folder: str, ext_audio: str, ext_txt: str
-) -> Tuple[str, int, str, int, int, int]:
-
-    # Get audio path and sample rate
-    fileid_audio = f"{speaker_id}-{chapter_id}-{utterance_id}"
-    filepath = os.path.join(folder, speaker_id, chapter_id, f"{fileid_audio}{ext_audio}")
+    filepath: Path, ext_txt: str
+) -> Tuple[str, str]:
 
     # Load text
-    file_text = f"{speaker_id}-{chapter_id}{ext_txt}"
-    file_text = os.path.join(root, folder, speaker_id, chapter_id, file_text)
-    with open(file_text) as ft:
-        for line in ft:
-            fileid_text, transcript = line.strip().split(" ", 1)
-            if fileid_audio == fileid_text:
-                break
-        else:
+    with open(filepath.with_suffix(ext_txt)) as f:
+        transcript = cleanup_transcript(f.readline().strip())
+        if len(transcript) == 0:
             # Translation not found
-            raise FileNotFoundError(f"Translation not found for {fileid_audio}")
+            raise FileNotFoundError(f"Translation not found for {filepath.name}")
 
     return (
-        filepath,
-        SAMPLE_RATE,
+        filepath.as_posix(),
         transcript,
     )
 
 
 class KORCONVERSESPEECH(Dataset):
-    """*LibriSpeech* :cite:`7178964` dataset.
-
+    """
     Args:
         root (str or Path): Path to the directory where the dataset is found or downloaded.
-        url (str, optional): The URL to download the dataset from,
-            or the type of the dataset to dowload.
-            Allowed type values are ``"dev-clean"``, ``"dev-other"``, ``"test-clean"``,
-            ``"test-other"``, ``"train-clean-100"``, ``"train-clean-360"`` and
-            ``"train-other-500"``. (default: ``"train-clean-100"``)
-        folder_in_archive (str, optional):
-            The top-level directory of the dataset. (default: ``"LibriSpeech"``)
-        download (bool, optional):
-            Whether to download the dataset if it is not found at root path. (default: ``False``).
+        subset_type (str): Type of subset to be trained on.
     """
 
     _ext_txt = ".txt"
@@ -85,13 +76,26 @@ class KORCONVERSESPEECH(Dataset):
         root: Union[str, Path],
         subset_type: str
     ) -> None:
-        root = os.fspath(root)
+        self.root = os.fspath(root)
 
         _unpack_korConverseSpeech(root, subset_type)
+        
+        if subset_type is "all":
+            audio_files_path = Path(root).rglob(f"*/*"+self._ext_audio)
+        else:
+            audio_files_path = Path(root).rglob(f"*/{subset_type}_*"+self._ext_audio)
+        
+        file_names = []
 
-        self._walker = sorted(str(p.stem) for p in Path(root).rglob(f"{subset_type}_*" + self._ext_audio))
+        for path in audio_files_path:
+            with open(path.with_suffix(self._ext_txt)) as f:
+                transcript = cleanup_transcript(f.readline().strip())
+                if len(transcript) > 0:
+                    file_names.append(path)
+                        
+        self._walker = file_names
 
-    def get_metadata(self, n: int) -> Tuple[Tensor, int, str, int, int, int]:
+    def get_metadata(self, n: int) -> Tuple[str, str]:
         """Get metadata for the n-th sample from the dataset. Returns filepath instead of waveform,
         but otherwise returns the same fields as :py:func:`__getitem__`.
 
@@ -107,17 +111,11 @@ class KORCONVERSESPEECH(Dataset):
                 Sample rate
             str:
                 Transcript
-            int:
-                Speaker ID
-            int:
-                Chapter ID
-            int:
-                Utterance ID
         """
-        fileid = self._walker[n]
-        return _get_korConverseSpeech_metadata(fileid, self._ext_audio, self._ext_txt)
+        file_path = self._walker[n]
+        return _get_korConverseSpeech_metadata(file_path, self._ext_txt)
 
-    def __getitem__(self, n: int) -> Tuple[Tensor, int, str, int, int, int]:
+    def __getitem__(self, n: int) -> Tuple[Tensor, int, str]:
         """Load the n-th sample from the dataset.
 
         Args:
@@ -132,16 +130,10 @@ class KORCONVERSESPEECH(Dataset):
                 Sample rate
             str:
                 Transcript
-            int:
-                Speaker ID
-            int:
-                Chapter ID
-            int:
-                Utterance ID
         """
         metadata = self.get_metadata(n)
-        waveform = _load_waveform(self._archive, metadata[0], metadata[1])
-        return (waveform,) + metadata[1:]
+        waveform, sample_rate = _load_waveform(metadata[0])
+        return (waveform,) + sample_rate + metadata[1:]
 
     def __len__(self) -> int:
         return len(self._walker)

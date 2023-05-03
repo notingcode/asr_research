@@ -15,14 +15,12 @@ import sentencepiece as spm
 
 def get_transcript_text(transcript_path, sep):
     new_list = list()
-    file_names = list()
     with open(transcript_path) as f:
         for line in f:
             modified_line = cleanup_transcript(line.split(sep, 1)[-1].strip())
-            if modified_line != None:
+            if len(modified_line) != 0:
                 new_list.append(modified_line)
-                file_names.append(line.split(sep, 1)[0].strip())
-        return [new_list, file_names]
+        return new_list
 
 
 def get_transcripts(dataset_path, sep):
@@ -34,9 +32,9 @@ def get_transcripts(dataset_path, sep):
     return merged_transcripts
 
 
-def cleanup_transcript(line_of_text):
+def cleanup_transcript(line_of_text) -> str:
     if(len(line_of_text) < 5):
-        return None
+        return ""
     
     cond = False
     partitions = re.split("(\([^\)]*\)/\([^\)]*\))", line_of_text)
@@ -48,21 +46,21 @@ def cleanup_transcript(line_of_text):
                     cond = True
                     break
     if cond == True:
-        return None
+        return ""
 
     left = line_of_text.count('(')
     right = line_of_text.count(')')
     
     if(left != right or left%2 == 1):
-        return None
+        return ""
 
     line_of_text = spelling_rep(line_of_text)
     
     if(bool(re.search('\d', line_of_text))):
-        return None
+        return ""
     
     if('(' in line_of_text or ')' in line_of_text):
-        return None
+        return ""
 
     line_of_text = remove_special_words(line_of_text)
     line_of_text = remove_dup_spaces(line_of_text)
@@ -71,7 +69,7 @@ def cleanup_transcript(line_of_text):
     right = line_of_text.count(')')
     
     if(left != right or left%2 == 1):
-        return None
+        return ""
     
     return line_of_text
 
@@ -145,24 +143,12 @@ def parse_args():
 def run_cli():
     args = parse_args()
 
-    merged_transcripts = []
-    file_names = []
-
-    temp = get_transcripts(args.kor_scripts_path, " :: ")
-    
-    merged_transcripts += temp[0]
-    file_names += temp[1]
-
-    with open(r"./aggregated_scripts.txt", 'w') as fp:
-        fp.write('\n'.join(merged_transcripts[:100]))
+    merged_transcripts = get_transcripts(args.kor_scripts_path, " :: ")
         
-    for idx, transcript in enumerate(file_names[:100]):
-        file_names[idx] = file_names[idx] + " :: " + merged_transcripts[idx]
-        
-    with open(r"./aggregated_filenames_scripts.txt", 'w') as fp2:
-        fp2.write('\n'.join(file_names[:100]))
+    with open(args.kor_scripts_path.as_posix()+"/aggregated_scripts.txt", 'w') as fp:
+        fp.write('\n'.join(merged_transcripts))
 
-    train_spm("./aggregated_scripts.txt", args.model_prefix)
+    train_spm(args.kor_scripts_path.as_posix()+"/aggregated_scripts.txt", args.model_prefix)
 
 if __name__ == "__main__":
     run_cli()

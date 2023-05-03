@@ -7,6 +7,7 @@ import sentencepiece as spm
 import torch
 import torchaudio
 from data_module import korConverseSpeechDataModule
+from data_module import korDysarthricSpeechDataModule
 from lightning import Batch
 
 _decibel = 2 * 20 * math.log10(torch.iinfo(torch.int16).max)
@@ -106,13 +107,19 @@ class TestTransform:
         return self.val_transforms([sample]), [sample]
 
 
-def get_data_module(librispeech_path, global_stats_path, sp_model_path):
+def get_data_module(data_path, global_stats_path, sp_model_path):
     train_transform = TrainTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
     val_transform = ValTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
     test_transform = TestTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
-    return korConverseSpeechDataModule(
-        librispeech_path=librispeech_path,
-        train_transform=train_transform,
-        val_transform=val_transform,
-        test_transform=test_transform,
-    )
+    
+    if "한국인 음성" in data_path:
+        return korConverseSpeechDataModule(
+            librispeech_path=data_path,
+            train_transform=train_transform,
+            val_transform=val_transform,
+            test_transform=test_transform,
+        )
+    elif "장애" in data_path:
+        return korDysarthricSpeechDataModule(
+            
+        )

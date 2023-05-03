@@ -12,15 +12,13 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 
 import torch
 import torchaudio
+import korConverseSpeech
 from common import (
-    MODEL_TYPE_LIBRISPEECH,
-    MODEL_TYPE_MUSTC,
-    MODEL_TYPE_TEDLIUM3,
+    MODEL_BASE,
+    MODEL_DISABLED,
     piecewise_linear_log,
     spectrogram_transform,
 )
-from mustc.dataset import MUSTC
-
 
 logger = logging.getLogger()
 
@@ -28,13 +26,20 @@ logger = logging.getLogger()
 def parse_args():
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        "--model-type", type=str, choices=[MODEL_TYPE_LIBRISPEECH, MODEL_TYPE_TEDLIUM3, MODEL_TYPE_MUSTC], required=True
+        "--model-type", type=str, choices=[MODEL_BASE, MODEL_DISABLED], required=True
     )
     parser.add_argument(
         "--dataset-path",
         required=True,
         type=pathlib.Path,
         help="Path to dataset. "
+        "For LibriSpeech, all of 'train-clean-360', 'train-clean-100', and 'train-other-500' must exist.",
+    )
+    parser.add_argument(
+        "--subset-type",
+        required=True,
+        type=str,
+        help="Subset type. "
         "For LibriSpeech, all of 'train-clean-360', 'train-clean-100', and 'train-other-500' must exist.",
     )
     parser.add_argument(
@@ -69,18 +74,12 @@ def generate_statistics(samples):
 
 
 def get_dataset(args):
-    if args.model_type == MODEL_TYPE_LIBRISPEECH:
+    if args.model_type == MODEL_BASE:
         return torch.utils.data.ConcatDataset(
             [
-                torchaudio.datasets.LIBRISPEECH(args.dataset_path, url="train-clean-360"),
-                torchaudio.datasets.LIBRISPEECH(args.dataset_path, url="train-clean-100"),
-                torchaudio.datasets.LIBRISPEECH(args.dataset_path, url="train-other-500"),
+                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, args.subset_type)
             ]
         )
-    elif args.model_type == MODEL_TYPE_TEDLIUM3:
-        return torchaudio.datasets.TEDLIUM(args.dataset_path, release="release3", subset="train")
-    elif args.model_type == MODEL_TYPE_MUSTC:
-        return MUSTC(args.dataset_path, subset="train")
     else:
         raise ValueError(f"Encountered unsupported model type {args.model_type}.")
 

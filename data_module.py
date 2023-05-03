@@ -5,6 +5,8 @@ import torch
 import torchaudio
 from pytorch_lightning import LightningDataModule
 import korConverseSpeech
+import korDysarthricSpeech
+from train_spm_base import cleanup_transcript
 
 
 def _batch_by_token_count(idx_target_lengths, max_tokens, batch_size=None):
@@ -26,24 +28,20 @@ def _batch_by_token_count(idx_target_lengths, max_tokens, batch_size=None):
     return batches
 
 
-def get_sample_lengths(librispeech_dataset):
-    fileid_to_target_length = {}
+def get_sample_lengths(korconversespeech_dataset):
+    filepath_to_target_length = {}
 
-    def _target_length(fileid):
-        if fileid not in fileid_to_target_length:
-            speaker_id, chapter_id, _ = fileid.split("-")
+    def _target_length(file_path):
+        if file_path not in filepath_to_target_length:
+            file_text_path = file_path.with_suffix(korconversespeech_dataset._ext_txt)
 
-            file_text = speaker_id + "-" + chapter_id + librispeech_dataset._ext_txt
-            file_text = os.path.join(librispeech_dataset._path, speaker_id, chapter_id, file_text)
+            with open(file_text_path) as ft:
+                transcript = cleanup_transcript(ft.readline().strip())
+                filepath_to_target_length[file_path.stem] = len(transcript)
 
-            with open(file_text) as ft:
-                for line in ft:
-                    fileid_text, transcript = line.strip().split(" ", 1)
-                    fileid_to_target_length[fileid_text] = len(transcript)
+        return filepath_to_target_length[file_path.stem]
 
-        return fileid_to_target_length[fileid]
-
-    return [_target_length(fileid) for fileid in librispeech_dataset._walker]
+    return [_target_length(fileid) for fileid in korconversespeech_dataset._walker]
 
 
 class CustomBucketDataset(torch.utils.data.Dataset):
@@ -110,6 +108,7 @@ class korConverseSpeechDataModule(LightningDataModule):
         self,
         *,
         kor_conversespeech_path,
+        subset_type,
         train_transform,
         val_transform,
         test_transform,
@@ -121,6 +120,7 @@ class korConverseSpeechDataModule(LightningDataModule):
     ):
         super().__init__()
         self.kor_conversespeech_path = kor_conversespeech_path
+        self.subset_type = subset_type
         self.train_dataset_lengths = None
         self.val_dataset_lengths = None
         self.train_transform = train_transform
@@ -133,10 +133,10 @@ class korConverseSpeechDataModule(LightningDataModule):
         self.num_workers = num_workers
 
     def train_dataloader(self):
-        datasets = self.kor_conversespeech_cls(self.kor_conversespeech_path, "dialog")
+        dataset = self.kor_conversespeech_cls(self.kor_conversespeech_path, self.subset_type)
 
         if not self.train_dataset_lengths:
-            self.train_dataset_lengths = [get_sample_lengths(dataset) for dataset in datasets]
+            self.train_dataset_lengths = [get_sample_lengths(dataset)]
 
         dataset = torch.utils.data.ConcatDataset(
             [
@@ -147,7 +147,7 @@ class korConverseSpeechDataModule(LightningDataModule):
                     self.train_num_buckets,
                     batch_size=self.batch_size,
                 )
-                for dataset, lengths in zip(datasets, self.train_dataset_lengths)
+                for dataset, lengths in self.train_dataset_lengths
             ]
         )
         dataset = TransformDataset(dataset, self.train_transform)
@@ -160,13 +160,11 @@ class korConverseSpeechDataModule(LightningDataModule):
         return dataloader
 
     def val_dataloader(self):
-        datasets = [
-            self.kor_conversespeech_cls(self.kor_conversespeech_path, "dialog"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path, "dialog"),
-        ]
+        
+        dataset = self.kor_conversespeech_cls(self.kor_conversespeech_path, self.subset_type)
 
         if not self.val_dataset_lengths:
-            self.val_dataset_lengths = [get_sample_lengths(dataset) for dataset in datasets]
+            self.val_dataset_lengths = [get_sample_lengths(dataset)]
 
         dataset = torch.utils.data.ConcatDataset(
             [
@@ -177,7 +175,7 @@ class korConverseSpeechDataModule(LightningDataModule):
                     1,
                     batch_size=self.batch_size,
                 )
-                for dataset, lengths in zip(datasets, self.val_dataset_lengths)
+                for dataset, lengths in dataset
             ]
         )
         dataset = TransformDataset(dataset, self.val_transform)
@@ -191,12 +189,12 @@ class korConverseSpeechDataModule(LightningDataModule):
         return dataloader
     
 class korDysarthricSpeechDataModule(LightningDataModule):
-    librispeech_cls = torchaudio.datasets.LIBRISPEECH
+    kordysarthricspeech_cls = korDysarthricSpeech.KORDYSARTHRICSPEECH
 
     def __init__(
         self,
         *,
-        librispeech_path,
+        kordysarthricspeech_path,
         train_transform,
         val_transform,
         test_transform,
@@ -207,7 +205,7 @@ class korDysarthricSpeechDataModule(LightningDataModule):
         num_workers=10,
     ):
         super().__init__()
-        self.librispeech_path = librispeech_path
+        self.kordysarthricspeech_path = kordysarthricspeech_path
         self.train_dataset_lengths = None
         self.val_dataset_lengths = None
         self.train_transform = train_transform
@@ -252,8 +250,8 @@ class korDysarthricSpeechDataModule(LightningDataModule):
 
     def val_dataloader(self):
         datasets = [
-            self.librispeech_cls(self.librispeech_path, url="dev-clean"),
-            self.librispeech_cls(self.librispeech_path, url="dev-other"),
+            self.kordysarthricspeech_cls(self.kordysarthricspeech_path, url="dev-clean"),
+            self.kordysarthricspeech_cls(self.kordysarthricspeech_path, url="dev-other"),
         ]
 
         if not self.val_dataset_lengths:
@@ -276,7 +274,7 @@ class korDysarthricSpeechDataModule(LightningDataModule):
         return dataloader
 
     def test_dataloader(self):
-        dataset = self.librispeech_cls(self.librispeech_path, url="test-clean")
+        dataset = self.kordysarthricspeech_cls(self.kordysarthricspeech_path, url="test-clean")
         dataset = TransformDataset(dataset, self.test_transform)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=None)
         return dataloader
