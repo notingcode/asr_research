@@ -29,9 +29,9 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
     assert(subset_type in _DATA_SUBSETS)
     
     if subset_type == "all":
-        tar_files = Path(source_path).glob(f"*[원천]*{ext_archive}*")
+        tar_files = Path(source_path).glob(f"*{ext_archive}*")
     else:
-        tar_files = Path(source_path).glob(f"*[원천]*{subset_type}_*{ext_archive}*")
+        tar_files = Path(source_path).glob(f"*{subset_type}_*{ext_archive}*")
     
     args = []
     
