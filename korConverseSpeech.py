@@ -29,9 +29,9 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
     assert(subset_type in _DATA_SUBSETS)
     
     if subset_type == "all":
-        tar_files = Path(source_path).rglob(f"*{ext_archive}*")
+        tar_files = Path(source_path).glob(f"*{ext_archive}*")
     else:
-        tar_files = Path(source_path).rglob(f"{subset_type}_*{ext_archive}*")
+        tar_files = Path(source_path).glob(f"*{subset_type}_*{ext_archive}*")
     
     args = []
     
@@ -50,7 +50,7 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
 
 
 def _get_korConverseSpeech_metadata(
-    filepath: Path, ext_txt: str
+    filepath: Path, ext_txt: str,
 ) -> Tuple[str, int, str]:
 
     # Load text
