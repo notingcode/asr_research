@@ -48,6 +48,10 @@ def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool 
 
 def _load_waveform(
     file_path: str,
+    exp_sample_rate: int,
 ):
     waveform, sample_rate = torchaudio.load(file_path)
-    return (waveform, sample_rate)
+    
+    if exp_sample_rate != sample_rate:
+        raise ValueError(f"sample rate should be {exp_sample_rate}, but got {sample_rate}")
+    return waveform
