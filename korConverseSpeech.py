@@ -29,15 +29,20 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
     assert(subset_type in _DATA_SUBSETS)
     
     if subset_type == "all":
-        tar_files = Path(source_path).rglob(f"*/*{ext_archive}")
+        tar_files = Path(source_path).rglob(f"*{ext_archive}*")
     else:
-        tar_files = Path(source_path).rglob(f"*/*_{subset_type}_*{ext_archive}")
+        tar_files = Path(source_path).rglob(f"{subset_type}_*{ext_archive}*")
     
     args = []
     
     for file in tar_files:
-        file.with_suffix("").mkdir(exist_ok=True)
-        args.append((file.as_posix(), file.with_suffix("").as_posix(), N_DIRECTORIES_STRIPPED))
+        to_path = file.with_suffix("")
+        if file.name.endswith("tar.gz"):
+            to_path = to_path.with_suffix("")
+            
+        to_path.mkdir(exist_ok=True)
+        
+        args.append((file.as_posix(), to_path.as_posix(), N_DIRECTORIES_STRIPPED))
     
     pool = mp.Pool(min(mp.cpu_count(), len(args)))
     
@@ -46,7 +51,7 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
 
 def _get_korConverseSpeech_metadata(
     filepath: Path, ext_txt: str
-) -> Tuple[str, str]:
+) -> Tuple[str, int, str]:
 
     # Load text
     with open(filepath.with_suffix(ext_txt)) as f:
@@ -57,6 +62,7 @@ def _get_korConverseSpeech_metadata(
 
     return (
         filepath.as_posix(),
+        SAMPLE_RATE,
         transcript,
     )
 
@@ -85,17 +91,17 @@ class KORCONVERSESPEECH(Dataset):
         else:
             audio_files_path = Path(root).rglob(f"*/{subset_type}_*"+self._ext_audio)
         
-        file_names = []
+        file_paths = []
 
         for path in audio_files_path:
             with open(path.with_suffix(self._ext_txt)) as f:
                 transcript = cleanup_transcript(f.readline().strip())
                 if len(transcript) > 0:
-                    file_names.append(path)
+                    file_paths.append(path)
                         
-        self._walker = file_names
+        self._walker = file_paths
 
-    def get_metadata(self, n: int) -> Tuple[str, str]:
+    def get_metadata(self, n: int) -> Tuple[str, int, str]:
         """Get metadata for the n-th sample from the dataset. Returns filepath instead of waveform,
         but otherwise returns the same fields as :py:func:`__getitem__`.
 
@@ -132,8 +138,8 @@ class KORCONVERSESPEECH(Dataset):
                 Transcript
         """
         metadata = self.get_metadata(n)
-        waveform, sample_rate = _load_waveform(metadata[0])
-        return (waveform,) + sample_rate + metadata[1:]
+        waveform = _load_waveform(metadata[0], metadata[1])
+        return (waveform, ) + metadata[1:]
 
     def __len__(self) -> int:
         return len(self._walker)

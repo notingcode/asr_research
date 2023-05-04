@@ -11,7 +11,12 @@ import torchaudio
 def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 9,) -> List[tarfile.TarInfo]:
     if to_path is None:
         to_path = os.path.dirname(from_path)
-    with tarfile.open(from_path, "r") as tar:
+    
+    mode = "r"
+    if from_path.endswith("tar.gz"):
+        mode = "r:gz"
+    
+    with tarfile.open(from_path, mode) as tar:
         logging.info("Opened tar file {}.", from_path)
         files = []
         for member in tar.getmembers():
