@@ -8,11 +8,6 @@ import torch
 import torchaudio
 from torchaudio.models import Hypothesis
 
-
-# MODEL_TYPE_LIBRISPEECH = "librispeech"
-# MODEL_TYPE_TEDLIUM3 = "tedlium3"
-# MODEL_TYPE_MUSTC = "mustc"
-
 MODEL_BASE = "base"
 MODEL_DISABLED = "disabled"
 
