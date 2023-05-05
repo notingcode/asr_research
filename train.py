@@ -38,7 +38,7 @@ def run_train(args):
         default_root_dir=args.exp_dir,
         max_epochs=args.epochs,
         num_nodes=args.nodes,
-        accelerator="gpu",
+        accelerator="cpu",
         strategy="ddp",
         callbacks=callbacks,
         reload_dataloaders_every_n_epochs=1,
