@@ -38,7 +38,6 @@ def run_train(args):
         default_root_dir=args.exp_dir,
         max_epochs=args.epochs,
         num_nodes=args.nodes,
-        # gpus=args.gpus,
         accelerator="gpu",
         strategy=DDPStrategy(find_unused_parameters=False),
         callbacks=callbacks,
@@ -48,7 +47,7 @@ def run_train(args):
 
     sp_model = spm.SentencePieceProcessor(model_file=str(args.sp_model_path))
     model = ConformerRNNTModule(sp_model)
-    data_module = get_data_module(str(args.librispeech_path), str(args.global_stats_path), str(args.sp_model_path))
+    data_module = get_data_module(str(args.korspeech_path), str(args.global_stats_path), str(args.sp_model_path))
     trainer.fit(model, data_module, ckpt_path=args.checkpoint_path)
 
 
@@ -73,9 +72,9 @@ def cli_main():
         help="Path to JSON file containing feature means and stddevs.",
     )
     parser.add_argument(
-        "--librispeech-path",
+        "--korspeech-path",
         type=pathlib.Path,
-        help="Path to LibriSpeech datasets.",
+        help="Path to Korean speech datasets.",
         required=True,
     )
     parser.add_argument(
@@ -90,12 +89,6 @@ def cli_main():
         type=int,
         help="Number of nodes to use for training. (Default: 4)",
     )
-    # parser.add_argument(
-    #     "--gpus",
-    #     default=8,
-    #     type=int,
-    #     help="Number of GPUs per node to use for training. (Default: 8)",
-    # )
     parser.add_argument(
         "--epochs",
         default=120,
