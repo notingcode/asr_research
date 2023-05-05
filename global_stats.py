@@ -9,10 +9,11 @@ import json
 import logging
 import pathlib
 from argparse import ArgumentParser, RawTextHelpFormatter
+import korConverseSpeech
+import korDysarthricSpeech
 
 import torch
 import torchaudio
-import korConverseSpeech
 from common import (
     MODEL_BASE,
     MODEL_DISABLED,
@@ -32,15 +33,7 @@ def parse_args():
         "--dataset-path",
         required=True,
         type=pathlib.Path,
-        help="Path to dataset. "
-        "For LibriSpeech, all of 'train-clean-360', 'train-clean-100', and 'train-other-500' must exist.",
-    )
-    parser.add_argument(
-        "--subset-type",
-        required=True,
-        type=str,
-        help="Subset type. "
-        "For LibriSpeech, all of 'train-clean-360', 'train-clean-100', and 'train-other-500' must exist.",
+        help="Path to dataset. ",
     )
     parser.add_argument(
         "--output-path",
@@ -77,9 +70,13 @@ def get_dataset(args):
     if args.model_type == MODEL_BASE:
         return torch.utils.data.ConcatDataset(
             [
-                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, args.subset_type)
+                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path / "Training", "hobby"),
+                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path / "Training", "dialog"),
+                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path / "Training", "play"),
             ]
         )
+    elif args.model_type == MODEL_DISABLED:
+        return korDysarthricSpeech.KORDYSARTHRICSPEECH(args.dataset_path, subset_type="train")
     else:
         raise ValueError(f"Encountered unsupported model type {args.model_type}.")
 
