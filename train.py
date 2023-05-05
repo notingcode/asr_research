@@ -6,7 +6,7 @@ import sentencepiece as spm
 from lightning import ConformerRNNTModule
 from pytorch_lightning import seed_everything, Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-from pytorch_lightning.strategies.ddp import DDPStrategy
+# from pytorch_lightning.strategies.ddp import DDPStrategy
 from transforms import get_data_module
 
 def run_train(args):
@@ -39,7 +39,7 @@ def run_train(args):
         max_epochs=args.epochs,
         num_nodes=args.nodes,
         accelerator="gpu",
-        strategy=DDPStrategy(find_unused_parameters=False),
+        strategy="ddp",
         callbacks=callbacks,
         reload_dataloaders_every_n_epochs=1,
         gradient_clip_val=10.0,
