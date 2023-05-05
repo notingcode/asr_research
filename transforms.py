@@ -7,8 +7,8 @@ import sentencepiece as spm
 import torch
 import torchaudio
 from data_module import korConverseSpeechDataModule
-from data_module import korDysarthricSpeechDataModule
 from lightning import Batch
+
 
 _decibel = 2 * 20 * math.log10(torch.iinfo(torch.int16).max)
 _gain = pow(10, 0.05 * _decibel)
@@ -47,7 +47,7 @@ class GlobalStatsNormalization(torch.nn.Module):
 
 
 def _extract_labels(sp_model, samples: List):
-    targets = [sp_model.encode(sample[2].lower()) for sample in samples]
+    targets = [sp_model.encode(sample[2]) for sample in samples]
     lengths = torch.tensor([len(elem) for elem in targets]).to(dtype=torch.int32)
     targets = torch.nn.utils.rnn.pad_sequence(
         [torch.tensor(elem) for elem in targets],
@@ -72,10 +72,10 @@ class TrainTransform:
             FunctionalModule(_piecewise_linear_log),
             GlobalStatsNormalization(global_stats_path),
             FunctionalModule(partial(torch.transpose, dim0=1, dim1=2)),
-            torchaudio.transforms.FrequencyMasking(27),
-            torchaudio.transforms.FrequencyMasking(27),
-            torchaudio.transforms.TimeMasking(100, p=0.2),
-            torchaudio.transforms.TimeMasking(100, p=0.2),
+            torchaudio.transforms.FrequencyMasking(31),
+            torchaudio.transforms.FrequencyMasking(31),
+            torchaudio.transforms.TimeMasking(41, p=0.2),
+            torchaudio.transforms.TimeMasking(41, p=0.2),
             FunctionalModule(partial(torch.transpose, dim0=1, dim1=2)),
         )
 
@@ -107,19 +107,13 @@ class TestTransform:
         return self.val_transforms([sample]), [sample]
 
 
-def get_data_module(data_path, global_stats_path, sp_model_path):
+def get_data_module(korspeech_path, global_stats_path, sp_model_path):
     train_transform = TrainTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
     val_transform = ValTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
     test_transform = TestTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
-    
-    if "한국인 음성" in data_path:
-        return korConverseSpeechDataModule(
-            librispeech_path=data_path,
-            train_transform=train_transform,
-            val_transform=val_transform,
-            test_transform=test_transform,
-        )
-    elif "장애" in data_path:
-        return korDysarthricSpeechDataModule(
-            
-        )
+    return korConverseSpeechDataModule(
+        kor_conversespeech_path=korspeech_path,
+        train_transform=train_transform,
+        val_transform=val_transform,
+        test_transform=test_transform,
+    )
