@@ -199,7 +199,7 @@ class korDysarthricSpeechDataModule(LightningDataModule):
         train_transform,
         val_transform,
         test_transform,
-        max_tokens=700,
+        max_tokens=6000,
         batch_size=2,
         train_num_buckets=50,
         train_shuffle=True,
