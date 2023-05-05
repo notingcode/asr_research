@@ -203,7 +203,7 @@ class korDysarthricSpeechDataModule(LightningDataModule):
         batch_size=2,
         train_num_buckets=50,
         train_shuffle=True,
-        num_workers=10,
+        num_workers=2,
     ):
         super().__init__()
         self.kor_conversespeech_path = kor_conversespeech_path
