@@ -101,7 +101,7 @@ class ConformerRNNTModule(LightningModule):
             conformer_depthwise_conv_kernel_size=31,
             conformer_dropout=0.2,
             num_symbols=6000,
-            symbol_embedding_dim=128,
+            symbol_embedding_dim=256,
             num_lstm_layers=2,
             lstm_hidden_dim=512,
             lstm_layer_norm=True,
