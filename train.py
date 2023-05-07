@@ -6,7 +6,6 @@ import sentencepiece as spm
 from lightning import ConformerRNNTModule
 from pytorch_lightning import seed_everything, Trainer
 from pytorch_lightning.callbacks import LearningRateMonitor, ModelCheckpoint
-# from pytorch_lightning.strategies.ddp import DDPStrategy
 from transforms import get_data_module
 
 def run_train(args):
