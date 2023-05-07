@@ -164,10 +164,10 @@ class ConformerRNNTModule(LightningModule):
         variable-length sequential data yield.
         """
         loss = self._step(batch, batch_idx, "train")
-        batch_size = batch.features.size(0)
-        batch_sizes = self.all_gather(batch_size)
-        self.log("Gathered batch size", batch_sizes.sum(), on_step=True, on_epoch=True)
-        loss *= batch_sizes.size(0) / batch_sizes.sum()  # world size / batch size
+        # batch_size = batch.features.size(0)
+        # batch_sizes = self.all_gather(batch_size)
+        # self.log("Gathered batch size", batch_sizes.sum(), on_step=True, on_epoch=True)
+        # loss *= batch_sizes.size(0) / batch_sizes.sum()  # world size / batch size
         return loss
 
     def validation_step(self, batch, batch_idx):
