@@ -85,9 +85,9 @@ def cli_main():
     )
     parser.add_argument(
         "--nodes",
-        default=8,
+        default=1,
         type=int,
-        help="Number of nodes to use for training. (Default: 8)",
+        help="Number of nodes to use for training. (Default: 1)",
     )
     parser.add_argument(
         "--epochs",
