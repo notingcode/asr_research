@@ -38,7 +38,7 @@ def run_train(args):
         max_epochs=args.epochs,
         num_nodes=args.nodes,
         accelerator="gpu",
-        strategy="ddp_notebook",
+        strategy="dp",
         callbacks=callbacks,
         reload_dataloaders_every_n_epochs=1,
         gradient_clip_val=10.0,
