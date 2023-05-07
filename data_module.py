@@ -108,10 +108,10 @@ class korConverseSpeechDataModule(LightningDataModule):
         val_transform,
         test_transform,
         max_tokens=1000,
-        batch_size=2,
+        batch_size=3,
         train_num_buckets=50,
         train_shuffle=True,
-        num_workers=10,
+        num_workers=5,
     ):
         super().__init__()
         self.kor_conversespeech_path = kor_conversespeech_path
