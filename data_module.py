@@ -128,9 +128,9 @@ class korConverseSpeechDataModule(LightningDataModule):
 
     def train_dataloader(self):
         datasets = [
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "hobby"),
+            # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "hobby"),
             self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "dialog"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "play"),
+            # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "play"),
         ]
 
         if not self.train_dataset_lengths:
@@ -159,9 +159,9 @@ class korConverseSpeechDataModule(LightningDataModule):
 
     def val_dataloader(self):
         datasets = [
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "hobby"),
+            # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "hobby"),
             self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "dialog"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "play"),
+            # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "play"),
         ]
 
         if not self.val_dataset_lengths:
@@ -190,12 +190,12 @@ class korConverseSpeechDataModule(LightningDataModule):
         return dataloader
     
 class korDysarthricSpeechDataModule(LightningDataModule):
-    kor_conversespeech_cls = korConverseSpeech.KORCONVERSESPEECH
+    kor_dysarthricspeech_cls = korDysarthricSpeech.KORDYSARTHRICSPEECH
 
     def __init__(
         self,
         *,
-        kor_conversespeech_path,
+        kor_dysarthricspeech_path,
         train_transform,
         val_transform,
         test_transform,
@@ -206,7 +206,7 @@ class korDysarthricSpeechDataModule(LightningDataModule):
         num_workers=2,
     ):
         super().__init__()
-        self.kor_conversespeech_path = kor_conversespeech_path
+        self.kor_dysarthricspeech_path = kor_dysarthricspeech_path
         self.train_dataset_lengths = None
         self.val_dataset_lengths = None
         self.train_transform = train_transform
@@ -220,9 +220,9 @@ class korDysarthricSpeechDataModule(LightningDataModule):
 
     def train_dataloader(self):
         datasets = [
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "hobby"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "dialog"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "play"),
+            self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Training", "hobby"),
+            self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Training", "dialog"),
+            self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Training", "play"),
         ]
 
         if not self.train_dataset_lengths:
@@ -251,9 +251,9 @@ class korDysarthricSpeechDataModule(LightningDataModule):
 
     def val_dataloader(self):
         datasets = [
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "hobby"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "dialog"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "play"),
+            self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Validation", "hobby"),
+            self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Validation", "dialog"),
+            self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Validation", "play"),
         ]
 
         if not self.val_dataset_lengths:
@@ -276,7 +276,7 @@ class korDysarthricSpeechDataModule(LightningDataModule):
         return dataloader
 
     def test_dataloader(self):
-        dataset = self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "life")
+        dataset = self.kor_dysarthricspeech_cls(self.kor_dysarthricspeech_path + "/Validation", "life")
         dataset = TransformDataset(dataset, self.test_transform)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=None)
         return dataloader
