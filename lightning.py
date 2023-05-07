@@ -95,7 +95,7 @@ class ConformerRNNTModule(LightningModule):
             encoding_dim=512,
             time_reduction_stride=2,
             conformer_input_dim=256,
-            conformer_ffn_dim=2048,
+            conformer_ffn_dim=1024,
             conformer_num_layers=12,
             conformer_num_heads=8,
             conformer_depthwise_conv_kernel_size=31,
