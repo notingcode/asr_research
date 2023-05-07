@@ -111,7 +111,7 @@ class korConverseSpeechDataModule(LightningDataModule):
         batch_size=2,
         train_num_buckets=50,
         train_shuffle=True,
-        num_workers=5,
+        num_workers=10,
     ):
         super().__init__()
         self.kor_conversespeech_path = kor_conversespeech_path
@@ -152,7 +152,7 @@ class korConverseSpeechDataModule(LightningDataModule):
         dataloader = torch.utils.data.DataLoader(
             dataset,
             num_workers=self.num_workers,
-            batch_size=32,
+            batch_size=None,
             shuffle=self.train_shuffle,
         )
         return dataloader
@@ -180,7 +180,7 @@ class korConverseSpeechDataModule(LightningDataModule):
             ]
         )
         dataset = TransformDataset(dataset, self.val_transform)
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=32, num_workers=self.num_workers)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=None, num_workers=self.num_workers)
         return dataloader
 
     def test_dataloader(self):
