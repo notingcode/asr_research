@@ -52,7 +52,7 @@ def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool 
                 if not overwrite:
                     continue
             files.append(file_info.filename)
-            zfile.extract(file_info, file_info.filename)
+            zfile.extract(file_info, to_path)
             
     return files
 
