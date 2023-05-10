@@ -124,7 +124,7 @@ class korConverseSpeechDataModule(LightningDataModule):
         test_transform,
         max_tokens=1000,
         batch_size=2,
-        train_num_buckets=50,
+        train_num_buckets=500,
         train_shuffle=True,
         num_workers=2,
     ):
@@ -143,9 +143,9 @@ class korConverseSpeechDataModule(LightningDataModule):
 
     def train_dataloader(self):
         datasets = [
-            # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "hobby"),
+            # self.kor_conversespeech_cls(self.kor_conversespeech_path, True, "hobby"),
             self.kor_conversespeech_cls(self.kor_conversespeech_path, True, "dialog"),
-            # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "play"),
+            # self.kor_conversespeech_cls(self.kor_conversespeech_path, True, "play"),
         ]
 
         if not self.train_dataset_lengths:
