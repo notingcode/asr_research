@@ -48,7 +48,6 @@ def get_sample_lengths(korconversespeech_dataset: korConverseSpeech.KORCONVERSES
                     audio_default_path, transcript = line.split(" :: ", 1)
                     fileid_text = audio_default_path.split("/", 6)[-1].split(".")[0]
                     transcript = cleanup_transcript(transcript.strip())
-                    print(f"{fileid_text} {filename}")
                     fileid_to_target_length[fileid_text] = len(transcript)
         
         return fileid_to_target_length[filename]
