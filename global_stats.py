@@ -70,9 +70,9 @@ def get_dataset(args):
     if args.model_type == MODEL_BASE:
         return torch.utils.data.ConcatDataset(
             [
-                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path / "Training", "hobby"),
-                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path / "Training", "dialog"),
-                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path / "Training", "play"),
+                # korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, True, "hobby"),
+                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, True, "dialog"),
+                # korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, True, "play"),
             ]
         )
     elif args.model_type == MODEL_DISABLED:
