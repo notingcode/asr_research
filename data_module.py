@@ -7,7 +7,6 @@ from pytorch_lightning import LightningDataModule
 import korConverseSpeech
 import korDysarthricSpeech
 from train_spm_base import cleanup_transcript
-from pathlib import Path
 from korConverseSpeech import SUBDIR_GETTER
 
 
@@ -34,21 +33,24 @@ def get_sample_lengths(korconversespeech_dataset: korConverseSpeech.KORCONVERSES
     fileid_to_target_length = {}
     
     def _target_length(filename: str):
-        subset_type, index = filename.split("_")      
+        if filename not in fileid_to_target_length:
+            subset_type, index = filename.split("_")      
 
-        index = int(index)-1
-        parent = korconversespeech_dataset.dataset_path
-        subdir = f"{subset_type}_{(index//SUBDIR_GETTER)+1:02d}"
-        filename = f"{subdir}_scripts{korconversespeech_dataset._ext_txt}"
+            index = int(index)-1
+            parent = korconversespeech_dataset.dataset_path
+            subdir = f"{subset_type}_{(index//SUBDIR_GETTER)+1:02d}"
+            filename = f"{subdir}_scripts{korconversespeech_dataset._ext_txt}"
 
-        filepath = os.path.join(parent, subdir, filename)
+            filepath = os.path.join(parent, subdir, filename)
 
-        with open(filepath) as f:
-            for line in f:
-                audio_default_path, transcript = line.split(" :: ", 1)
-                fileid_text = audio_default_path.split("/", 6)[-1].split(".")[0]
-                transcript = cleanup_transcript(transcript.strip())
-                fileid_to_target_length[fileid_text] = len(transcript)
+            with open(filepath) as f:
+                for line in f:
+                    audio_default_path, transcript = line.split(" :: ", 1)
+                    fileid_text = audio_default_path.split("/", 6)[-1].split(".")[0]
+                    transcript = cleanup_transcript(transcript.strip())
+                    fileid_to_target_length[fileid_text] = len(transcript)
+        
+        return fileid_to_target_length[filename]
 
     return [_target_length(filename) for filename in korconversespeech_dataset._walker]
 
