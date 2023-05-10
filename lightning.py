@@ -144,7 +144,7 @@ class ConformerRNNTModule(LightningModule):
         return post_process_hypos(hypotheses, self.sp_model)[0][0]
 
     def training_step(self, batch: Batch, batch_idx):
-        """Custom training step.
+        r"""Custom training step.
 
         By default, DDP does the following on each train step:
         - For each GPU, compute loss and gradient on shard of training data.
@@ -164,10 +164,10 @@ class ConformerRNNTModule(LightningModule):
         variable-length sequential data yield.
         """
         loss = self._step(batch, batch_idx, "train")
-        # batch_size = batch.features.size(0)
-        # batch_sizes = self.all_gather(batch_size)
-        # self.log("Gathered batch size", batch_sizes.sum(), on_step=True, on_epoch=True)
-        # loss *= batch_sizes.size(0) / batch_sizes.sum()  # world size / batch size
+        batch_size = batch.features.size(0)
+        batch_sizes = self.all_gather(batch_size)
+        self.log("Gathered batch size", batch_sizes.sum(), on_step=True, on_epoch=True)
+        loss *= batch_sizes.size(0) / batch_sizes.sum()  # world size / batch size
         return loss
 
     def validation_step(self, batch, batch_idx):
