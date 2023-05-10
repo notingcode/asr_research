@@ -11,6 +11,7 @@ from torchaudio.models import Hypothesis
 MODEL_BASE = "base"
 MODEL_DISABLED = "disabled"
 SAMPLE_RATE = 16000
+DYS_SAMPLE_RATE = 44100
 
 DECIBEL = 2 * 20 * math.log10(torch.iinfo(torch.int16).max)
 GAIN = pow(10, 0.05 * DECIBEL)

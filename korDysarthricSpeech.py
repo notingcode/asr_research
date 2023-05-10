@@ -9,7 +9,6 @@ from untar_unzip import _extract_zip, _load_waveform
 from common import SAMPLE_RATE
 
 N_DIRECTORIES_STRIPPED = 0
-DYS_SAMPLE_RATE = 44100
 _DATA_SUBSETS = [
     "뇌신경장애",
     "언어청각장애",
