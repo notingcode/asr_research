@@ -33,6 +33,7 @@ def get_sample_lengths(korconversespeech_dataset: korConverseSpeech.KORCONVERSES
     fileid_to_target_length = {}
     
     def _target_length(filename: str):
+        print(filename)
         if filename not in fileid_to_target_length:
             subset_type, index = filename.split("_")      
 
