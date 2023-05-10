@@ -7,6 +7,8 @@ from pytorch_lightning import LightningDataModule
 import korConverseSpeech
 import korDysarthricSpeech
 from train_spm_base import cleanup_transcript
+from pathlib import Path
+from korConverseSpeech import SUBDIR_GETTER
 
 
 def _batch_by_token_count(idx_target_lengths, max_tokens, batch_size=None):
@@ -28,16 +30,27 @@ def _batch_by_token_count(idx_target_lengths, max_tokens, batch_size=None):
     return batches
 
 
-def get_sample_lengths(korconversespeech_dataset):
+def get_sample_lengths(korconversespeech_dataset: korConverseSpeech.KORCONVERSESPEECH):
+    fileid_to_target_length = {}
+    
+    def _target_length(filename: str):
+        subset_type, index = filename.split("_")      
 
-    def _target_length(file_path):
-        file_text_path = file_path.with_suffix(korconversespeech_dataset._ext_txt)
+        index = int(index)-1
+        parent = korconversespeech_dataset.dataset_path
+        subdir = f"{subset_type}_{(index//SUBDIR_GETTER)+1:02d}"
+        filename = f"{subdir}_scripts{korconversespeech_dataset._ext_txt}"
 
-        with open(file_text_path) as f:
-            transcript = cleanup_transcript(f.readline().strip())
-            return len(transcript)
+        filepath = os.path.join(parent, subdir, filename)
 
-    return [_target_length(file_path) for file_path in korconversespeech_dataset._walker]
+        with open(filepath) as f:
+            for line in f:
+                audio_default_path, transcript = line.split(" :: ", 1)
+                fileid_text = audio_default_path.split("/", 6)[-1].split(".")[0]
+                transcript = cleanup_transcript(transcript.strip())
+                fileid_to_target_length[fileid_text] = len(transcript)
+
+    return [_target_length(filename) for filename in korconversespeech_dataset._walker]
 
 
 class CustomBucketDataset(torch.utils.data.Dataset):
@@ -129,7 +142,7 @@ class korConverseSpeechDataModule(LightningDataModule):
     def train_dataloader(self):
         datasets = [
             # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "hobby"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "dialog"),
+            self.kor_conversespeech_cls(self.kor_conversespeech_path, True, "dialog"),
             # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Training", "play"),
         ]
 
@@ -160,7 +173,7 @@ class korConverseSpeechDataModule(LightningDataModule):
     def val_dataloader(self):
         datasets = [
             # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "hobby"),
-            self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "dialog"),
+            self.kor_conversespeech_cls(self.kor_conversespeech_path, False, "dialog"),
             # self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "play"),
         ]
 
@@ -184,7 +197,7 @@ class korConverseSpeechDataModule(LightningDataModule):
         return dataloader
 
     def test_dataloader(self):
-        dataset = self.kor_conversespeech_cls(self.kor_conversespeech_path + "/Validation", "life")
+        dataset = self.kor_conversespeech_cls(self.kor_conversespeech_path, False, "life")
         dataset = TransformDataset(dataset, self.test_transform)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=None)
         return dataloader
