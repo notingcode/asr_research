@@ -4,8 +4,10 @@ import tarfile
 import zipfile
 from typing import Any, List, Optional
 from pathlib import Path
-from korDysarthricSpeech import DYS_SAMPLE_RATE
-from common import SAMPLE_RATE
+from common import (
+    SAMPLE_RATE,
+    DYS_SAMPLE_RATE
+)
 
 import torchaudio
 
