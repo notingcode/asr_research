@@ -37,10 +37,6 @@ def _unpack_korConverseSpeech(source_path: Union[str, Path], subset_type: str):
     args = []
     
     for file in tar_files:
-        to_path = file.with_suffix("")
-        if file.name.endswith("tar.gz"):
-            to_path = to_path.with_suffix("")
-        
         args.append((file.as_posix(), source_path, False, N_DIRECTORIES_STRIPPED))
     
     pool = mp.Pool(min(mp.cpu_count(), len(args)))
