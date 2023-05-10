@@ -84,7 +84,7 @@ def get_dataset(args):
 def cli_main():
     args = parse_args()
     dataset = get_dataset(args)
-    dataloader = torch.utils.data.DataLoader(dataset, num_workers=4)
+    dataloader = torch.utils.data.DataLoader(dataset, num_workers=2)
     mean, stddev = generate_statistics(iter(dataloader))
 
     json_str = json.dumps({"mean": mean.tolist(), "invstddev": (1 / stddev).tolist()}, indent=2)
