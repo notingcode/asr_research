@@ -45,27 +45,29 @@ def _unpack_korConverseSpeech(source_path: Union[str, Path], subset_type: str):
 
 
 def _get_korConverseSpeech_metadata(
-    filename: str, dataset_path: str, ext_txt: str,
+    filename: str, dataset_path: str, ext_audio: str, ext_txt: str,
 ) -> Tuple[str, int, str]:
     subset_type, index = filename.split("_")
 
     index = int(index)-1
 
     transcript_file = filename+ext_txt
+    audio_file = filename+ext_audio
     subset_subdir = f"{subset_type}_{(index//SUBDIR_GETTER)+1:02d}"
     indexed_dir = f"{(index//INDEX_SUBDIR_GETTER)+1:03d}"
     
-    filepath = os.path.join(dataset_path, subset_subdir, indexed_dir, transcript_file)
+    transcript_filepath = os.path.join(dataset_path, subset_subdir, indexed_dir, transcript_file)
+    audio_filepath = os.path.join(dataset_path, subset_subdir, indexed_dir, audio_file)
 
     # Load text
-    with open(filepath) as f:
+    with open(transcript_filepath) as f:
         transcript = cleanup_transcript(f.readline().strip())
         if len(transcript) == 0:
             # Translation not found
-            raise FileNotFoundError(f"Translation not found for {filepath}")
+            raise FileNotFoundError(f"Translation not found for {filename}")
 
     return (
-        filepath,
+        audio_filepath,
         SAMPLE_RATE,
         transcript,
     )
@@ -132,7 +134,7 @@ class KORCONVERSESPEECH(Dataset):
                 Transcript
         """
         file_name = self._walker[n]
-        return _get_korConverseSpeech_metadata(file_name, self.dataset_path, self._ext_txt)
+        return _get_korConverseSpeech_metadata(file_name, self.dataset_path, self._ext_audio, self._ext_txt)
 
     def __getitem__(self, n: int) -> Tuple[Tensor, int, str]:
         """Load the n-th sample from the dataset.
