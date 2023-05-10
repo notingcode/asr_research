@@ -7,9 +7,9 @@ from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_tar, _load_waveform
 from train_spm_base import cleanup_transcript
+from common import SAMPLE_RATE
 
 N_DIRECTORIES_STRIPPED = 9
-SAMPLE_RATE = 16000
 _DATA_SUBSETS = [
     "broadcast",
     "hobby",
@@ -21,13 +21,14 @@ _DATA_SUBSETS = [
     "shopping",
     "all"
 ]
+TRAIN_SUBDIR_NAME = "Training"
+VALID_SUBDIR_NAME = "Validation"
+SUBDIR_GETTER = 100000
+INDEX_SUBDIR_GETTER = 1000
 
-
-def _unpack_korConverseSpeech(source_path, subset_type: str):
+def _unpack_korConverseSpeech(source_path: Union[str, Path], subset_type: str):
     ext_archive = ".tar"
-    
-    assert(subset_type in _DATA_SUBSETS)
-    
+        
     if subset_type == "all":
         tar_files = Path(source_path).glob(f"*{ext_archive}*")
     else:
@@ -39,10 +40,8 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
         to_path = file.with_suffix("")
         if file.name.endswith("tar.gz"):
             to_path = to_path.with_suffix("")
-            
-        to_path.mkdir(exist_ok=True)
         
-        args.append((file.as_posix(), to_path.as_posix(), N_DIRECTORIES_STRIPPED))
+        args.append((file.as_posix(), source_path, False, N_DIRECTORIES_STRIPPED))
     
     pool = mp.Pool(min(mp.cpu_count(), len(args)))
     
@@ -50,18 +49,27 @@ def _unpack_korConverseSpeech(source_path, subset_type: str):
 
 
 def _get_korConverseSpeech_metadata(
-    filepath: Path, ext_txt: str,
+    filename: str, dataset_path: str, ext_txt: str,
 ) -> Tuple[str, int, str]:
+    subset_type, index = filename.split("_")
+
+    index = int(index)-1
+
+    transcript_file = filename+ext_txt
+    subset_subdir = f"{subset_type}_{(index//SUBDIR_GETTER)+1:02d}"
+    indexed_dir = f"{(index//INDEX_SUBDIR_GETTER)+1:03d}"
+    
+    filepath = os.path.join(dataset_path, subset_subdir, indexed_dir, transcript_file)
 
     # Load text
-    with open(filepath.with_suffix(ext_txt)) as f:
+    with open(filepath) as f:
         transcript = cleanup_transcript(f.readline().strip())
         if len(transcript) == 0:
             # Translation not found
-            raise FileNotFoundError(f"Translation not found for {filepath.name}")
+            raise FileNotFoundError(f"Translation not found for {filepath}")
 
     return (
-        filepath.as_posix(),
+        filepath,
         SAMPLE_RATE,
         transcript,
     )
@@ -80,16 +88,27 @@ class KORCONVERSESPEECH(Dataset):
     def __init__(
         self,
         root: Union[str, Path],
-        subset_type: str
+        training: bool,
+        subset_type: str,
     ) -> None:
         self.root = os.fspath(root)
-
-        _unpack_korConverseSpeech(root, subset_type)
+        self.subset_type = subset_type.lower()
         
-        if subset_type == "all":
-            audio_files_path = Path(root).rglob("*"+self._ext_audio)
+        if training:
+            dataset_path = os.path.join(root, TRAIN_SUBDIR_NAME)
         else:
-            audio_files_path = Path(root).rglob(f"{subset_type}_*"+self._ext_audio)
+            dataset_path = os.path.join(root, VALID_SUBDIR_NAME)
+            
+        self.dataset_path = dataset_path
+
+        assert(self.subset_type in _DATA_SUBSETS)
+
+        _unpack_korConverseSpeech(self.dataset_path, self.subset_type)
+        
+        if self.subset_type == "all":
+            audio_files_path = Path(self.dataset_path).rglob("*"+self._ext_audio)
+        else:
+            audio_files_path = Path(self.dataset_path).rglob(f"{subset_type}_*"+self._ext_audio)
         
         file_paths = []
 
@@ -97,7 +116,7 @@ class KORCONVERSESPEECH(Dataset):
             with open(path.with_suffix(self._ext_txt)) as f:
                 transcript = cleanup_transcript(f.readline().strip())
                 if len(transcript) > 0:
-                    file_paths.append(path)
+                    file_paths.append(path.stem)
                         
         self._walker = file_paths
 
@@ -118,8 +137,8 @@ class KORCONVERSESPEECH(Dataset):
             str:
                 Transcript
         """
-        file_path = self._walker[n]
-        return _get_korConverseSpeech_metadata(file_path, self._ext_txt)
+        file_name = self._walker[n]
+        return _get_korConverseSpeech_metadata(file_name, self.dataset_path, self._ext_txt)
 
     def __getitem__(self, n: int) -> Tuple[Tensor, int, str]:
         """Load the n-th sample from the dataset.
