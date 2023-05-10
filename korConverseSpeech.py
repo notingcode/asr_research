@@ -106,15 +106,13 @@ class KORCONVERSESPEECH(Dataset):
         else:
             audio_files_path = Path(self.dataset_path).rglob(f"{subset_type}_*"+self._ext_audio)
         
-        file_paths = []
+        self._walker = []
 
         for path in audio_files_path:
             with open(path.with_suffix(self._ext_txt)) as f:
                 transcript = cleanup_transcript(f.readline().strip())
                 if len(transcript) > 0:
-                    file_paths.append(path.stem)
-                        
-        self._walker = file_paths
+                    self._walker.append(path.stem)                        
 
     def get_metadata(self, n: int) -> Tuple[str, int, str]:
         """Get metadata for the n-th sample from the dataset. Returns filepath instead of waveform,
