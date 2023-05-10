@@ -107,7 +107,7 @@ def train_spm(input_file, prefix):
     spm.SentencePieceTrainer.train(
         input = input_file,
         model_prefix = prefix,
-        vocab_size=350,
+        vocab_size=6000,
         model_type="unigram",
         input_sentence_size=-1,
         pad_id=0,
