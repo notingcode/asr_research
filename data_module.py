@@ -39,9 +39,9 @@ def get_sample_lengths(korconversespeech_dataset: korConverseSpeech.KORCONVERSES
             index = int(index)-1
             parent = korconversespeech_dataset.dataset_path
             subdir = f"{subset_type}_{(index//SUBDIR_GETTER)+1:02d}"
-            filename = f"{subdir}_scripts{korconversespeech_dataset._ext_txt}"
+            filename_with_ext = f"{subdir}_scripts{korconversespeech_dataset._ext_txt}"
 
-            filepath = os.path.join(parent, subdir, filename)
+            filepath = os.path.join(parent, subdir, filename_with_ext)
 
             with open(filepath) as f:
                 for line in f:
