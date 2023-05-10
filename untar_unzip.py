@@ -4,11 +4,14 @@ import tarfile
 import zipfile
 from typing import Any, List, Optional
 from pathlib import Path
+from korDysarthricSpeech import DYS_SAMPLE_RATE
+from common import SAMPLE_RATE
 
 import torchaudio
 
+_resampler = torchaudio.transforms.Resample(DYS_SAMPLE_RATE, SAMPLE_RATE, lowpass_filter_width=12)
 
-def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 9,) -> List[tarfile.TarInfo]:
+def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 9,) -> List[str]:
     if to_path is None:
         to_path = os.path.dirname(from_path)
     
@@ -26,13 +29,13 @@ def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool 
                 logging.info("{} already extracted.".format(file_path))
                 if not overwrite:
                     continue
-            files.append(member)
+            files.append(member.name)
+            tar.extract(member, to_path)
             
-        tar.extractall(path=to_path, members=files)
         return files
 
 
-def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 0,) -> List[zipfile.ZipInfo]:
+def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 0,) -> List[str]:
     if to_path is None:
         to_path = os.path.dirname(from_path)
 
@@ -46,9 +49,9 @@ def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool 
                 logging.info("{} already extracted.".format(file_info.filename))
                 if not overwrite:
                     continue
-            files.append(file_info)
+            files.append(file_info.filename)
+            zfile.extract(file_info, file_info.filename)
             
-        zfile.extractall(to_path, members=files)
     return files
 
 
@@ -59,5 +62,8 @@ def _load_waveform(
     waveform, sample_rate = torchaudio.load(file_path)
     
     if exp_sample_rate != sample_rate:
-        raise ValueError(f"sample rate should be {exp_sample_rate}, but got {sample_rate}")
+        if sample_rate == DYS_SAMPLE_RATE:
+            waveform = _resampler(waveform)
+        else:
+            raise ValueError(f"sample rate should be {exp_sample_rate}, but got {sample_rate}")
     return waveform
