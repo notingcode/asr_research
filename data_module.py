@@ -123,7 +123,7 @@ class korConverseSpeechDataModule(LightningDataModule):
         val_transform,
         test_transform,
         max_tokens=1000,
-        batch_size=2,
+        batch_size=1,
         train_num_buckets=500,
         train_shuffle=True,
         num_workers=2,
