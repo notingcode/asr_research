@@ -1,10 +1,10 @@
 import re
 
-SOLUGATE_SPECIAL_SYMBOLS = re.compile("[\*\+/blon\.\?]")
+SOLUGATE_SPECIAL_SYMBOLS = re.compile(r"[*+blon.?]")
 SPACES = re.compile(r"\s+")
 SLASH_SEPARATED_PARENS = re.compile("(\([^\)]*\)/\([^\)]*\))")
 INSIDE_PARANS = re.compile("\(([^()]*)\)")
-DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FNOPS:]")
+DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FfNnOoPpSs:]")
 
 def cleanup_transcript(line_of_text):
     
@@ -35,7 +35,7 @@ def cleanup_transcript(line_of_text):
     if(left != right or left%2 == 1):
         return None
     
-    if(len(line_of_text) < 5):
+    if(len(line_of_text) < 5 or len(line_of_text) <= 700):
         return None
     
     return line_of_text
