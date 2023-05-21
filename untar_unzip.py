@@ -2,7 +2,7 @@ import logging
 import os
 import tarfile
 import zipfile
-from typing import Any, List, Optional
+from typing import List, Optional
 from pathlib import Path
 from common import (
     SAMPLE_RATE,
@@ -27,11 +27,12 @@ def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool 
         for member in tar.getmembers():
             member.path = member.path.split('/', n_directories_stripped)[-1]
             file_path = os.path.join(to_path, member.path)
-            if os.path.exists(file_path):
-                logging.info("{} already extracted.".format(file_path))
-                if not overwrite:
-                    continue
-            files.append(member.name)
+            if member.isfile():
+                files.append(file_path)
+                if os.path.exists(file_path):
+                    logging.info("{} already extracted.".format(file_path))
+                    if not overwrite:
+                        continue
             tar.extract(member, to_path)
             
         return files
@@ -43,15 +44,14 @@ def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool 
 
     with zipfile.ZipFile(from_path, "r") as zfile:
         logging.info("Opened zip file {}.", from_path)
-        files = []
+        files = zfile.namelist()
         for file_info in zfile.infolist():
             file_info.filename = file_info.filename.split('/', n_directories_stripped)[-1]
-            file_info.filename = os.path.join(to_path, file_info.filename)
-            if os.path.exists(file_info.filename):
-                logging.info("{} already extracted.".format(file_info.filename))
+            file_path = os.path.join(to_path, file_info.filename)
+            if os.path.exists(file_path):
+                logging.info("{} already extracted.".format(file_path))
                 if not overwrite:
                     continue
-            files.append(file_info.filename)
             zfile.extract(file_info, to_path)
             
     return files
