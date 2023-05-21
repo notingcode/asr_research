@@ -7,7 +7,11 @@ from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_tar, _load_waveform
 from train_spm_base import cleanup_transcript
-from common import SAMPLE_RATE
+from common import(
+    SAMPLE_RATE,
+    TRAIN_SUBDIR_NAME,
+    VALID_SUBDIR_NAME,
+)
 
 N_DIRECTORIES_STRIPPED = 9
 _DATA_SUBSETS = [
@@ -21,15 +25,14 @@ _DATA_SUBSETS = [
     "shopping",
     "all"
 ]
-TRAIN_SUBDIR_NAME = "Training"
-VALID_SUBDIR_NAME = "Validation"
+
 SUBDIR_GETTER = 100000
 INDEX_SUBDIR_GETTER = 1000
 
-def _unpack_korConverseSpeech(source_path: Union[str, Path], subset_type: str):
-    ext_archive = ".tar"
+def unpack_solugateSpeech(source_path: Union[str, Path], subset_type: str):
+    ext_archive = '.tar'
         
-    if subset_type == "all":
+    if subset_type == 'all':
         tar_files = Path(source_path).glob(f"*{ext_archive}*")
     else:
         tar_files = Path(source_path).glob(f"*{subset_type}_*{ext_archive}*")
@@ -73,7 +76,7 @@ def _get_korConverseSpeech_metadata(
     )
 
 
-class KORSPEECH(Dataset):
+class SOLUGATESPEECH(Dataset):
     """
     Args:
         root (str or Path): Path to the directory where the dataset is found or downloaded.
@@ -101,7 +104,7 @@ class KORSPEECH(Dataset):
 
         assert(self.subset_type in _DATA_SUBSETS)
 
-        _unpack_korConverseSpeech(self.dataset_path, self.subset_type)
+        unpack_solugateSpeech(self.dataset_path, self.subset_type)
         
         if self.subset_type == "all":
             audio_files_path = Path(self.dataset_path).rglob("*"+self._ext_audio)
