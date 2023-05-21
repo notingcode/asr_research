@@ -5,22 +5,40 @@ Example:
 python train_spm.py --kor-scripts-path ./datasets
 """
 
-import io
-import pathlib
+from pathlib import Path
 import json
 from argparse import ArgumentParser, RawTextHelpFormatter
 from script_normalization import(
     cleanup_transcript,
     edit_annotation,
 )
+from solugate_converspeech import unpack_solugateSpeech
+from diquest_normalspeech import unpack_diquestSpeech
+from hallym_dysarthricspeech import(
+    # unpack_dysarthricSpeech,
+    TOP_SUBDIR_NAME,
+    LABEL_DIR_NAME,
+)
+
+from common import(
+    DIQUEST_DIR_NAME,
+    SOLUGATE_DIR_NAME,
+    DYSARTHRIC_DIR_NAME,
+    TRAIN_SUBDIR_NAME,
+)
+EXT_TYP_KEY = 'ext_typ'
+SEPARATOR_TYP_KEY = 'sep_typ'
+
+JSON_EXT = '.json'
+SCRIPTS_EXT = '_scripts.txt'
 
 import sentencepiece as spm
 
-SCRIPTS_TXT_EXT = "*_scripts.txt"
-JSON_EXT = "*.json"
-TXT_EXT = "*.txt"
-
-EXT_DICT = {"txt": TXT_EXT, "json": JSON_EXT, "scripts": SCRIPTS_TXT_EXT}
+DATASET_OPTIONS = {
+    DIQUEST_DIR_NAME : {EXT_TYP_KEY : JSON_EXT, SEPARATOR_TYP_KEY : ''},
+    SOLUGATE_DIR_NAME : {EXT_TYP_KEY : SCRIPTS_EXT, SEPARATOR_TYP_KEY : ' :: '},
+    # DYSARTHRIC_DIR_NAME : {EXT_TYP_KEY : '.json', SEPARATOR_TYP_KEY : ''},
+}
 
 def get_scripts_from_txt(transcript_path, separator):
     new_list = list()
@@ -34,36 +52,45 @@ def get_scripts_from_txt(transcript_path, separator):
 def get_script_from_json(transcript_path):
     with open(transcript_path) as f:
         data = json.load(f)
-        modified_line = edit_annotation(data['발화정보']['stt'].strip("\\"))
+        modified_line = edit_annotation(data['발화정보']['stt'].strip('\\'))
         
     return modified_line
 
-def get_script_from_txt(transcript_path, separator):
-    with open(transcript_path) as f:
-        modified_line = cleanup_transcript(f.readline().split(separator, 1)[-1].strip())
-        
-    return modified_line
-
-def get_transcripts(dataset_path, typ: str="txt", separator: str=""):
+def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator: str=''):
     
-    ext = EXT_DICT[typ]
-    
-    training_metadata_base_path = pathlib.PosixPath(dataset_path)
-    training_scripts_filePath = training_metadata_base_path.rglob(ext)
     merged_transcripts = []
-    for path in training_scripts_filePath:
-        match typ:
-            case "scripts": merged_transcripts += get_scripts_from_txt(path, separator)
-            case "json": merged_transcripts.append(get_script_from_json(path))
-            case "txt": merged_transcripts.append(get_script_from_txt(path, separator))
+    
+    dataset_path = datasets_path.joinpath(dataset_name)
+    
+    if not dataset_path.is_dir():
+        return merged_transcripts
+    
+    if dataset_name is DYSARTHRIC_DIR_NAME:
+        dataset_path = dataset_path.joinpath(TOP_SUBDIR_NAME, f'1.{TRAIN_SUBDIR_NAME}', LABEL_DIR_NAME)
+    elif dataset_name is SOLUGATE_DIR_NAME:
+        dataset_path = dataset_path.joinpath(TRAIN_SUBDIR_NAME)
+        unpack_solugateSpeech(dataset_path, 'all')
+    elif dataset_name is DIQUEST_DIR_NAME:
+        dataset_path = dataset_path.joinpath(TRAIN_SUBDIR_NAME)
+        unpack_diquestSpeech(dataset_path)
+    
+    
+    file_paths = dataset_path.glob(f"*/*{ext}")
+
+    if ext is JSON_EXT:
+        for file_path in file_paths:
+            merged_transcripts.append(get_script_from_json(file_path))
+    elif ext is SCRIPTS_EXT:
+        for file_path in file_paths:
+            merged_transcripts += get_scripts_from_txt(file_path, separator)
 
     return merged_transcripts
 
-def train_spm(input_file, prefix):
+def train_spm(list_of_texts, prefix):
     spm.SentencePieceTrainer.Train(
-        input = input_file,
+        sentence_iterator = iter(list_of_texts),
         model_prefix = prefix,
-        vocab_size=6000,
+        vocab_size=10000,
         model_type="unigram",
         input_sentence_size=-1,
         pad_id=0,
@@ -82,9 +109,9 @@ def parse_args():
     default_prefix = "baseline"
     parser = ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        "--kor-scripts-path",
+        "--kor-datasets-path",
         required=True,
-        type=pathlib.Path,
+        type=Path,
         help="Path to script dataset.",
     )
     parser.add_argument(
@@ -99,12 +126,12 @@ def parse_args():
 def run_cli():
     args = parse_args()
 
-    merged_transcripts = get_transcripts(args.kor_scripts_path, " :: ")
-        
-    with open(args.kor_scripts_path.as_posix()+"/aggregated_scripts.txt", 'w') as fp:
-        fp.write('\n'.join(merged_transcripts))
+    merged_transcripts = []
+    
+    for dataset_name, options in DATASET_OPTIONS.items():
+        merged_transcripts += get_transcripts(args.kor_datasets_path, dataset_name, options[EXT_TYP_KEY], options[SEPARATOR_TYP_KEY])        
 
-    train_spm(args.kor_scripts_path.as_posix()+"/aggregated_scripts.txt", args.model_prefix)
+    train_spm(merged_transcripts, args.model_prefix)
 
 if __name__ == "__main__":
     run_cli()
