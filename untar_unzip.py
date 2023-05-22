@@ -42,7 +42,7 @@ def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool 
     if to_path is None:
         to_path = os.path.dirname(from_path)
 
-    with zipfile.ZipFile(from_path, "r") as zfile:
+    with zipfile.ZipFile(from_path, "r", metadata_encoding='cp949') as zfile:
         logging.info("Opened zip file {}.", from_path)
         files = zfile.namelist()
         for file_info in zfile.infolist():
@@ -55,7 +55,6 @@ def _extract_zip(from_path: str, to_path: Optional[str] = None, overwrite: bool 
             zfile.extract(file_info, to_path)
             
     return files
-
 
 def _load_waveform(
     file_path: str,
