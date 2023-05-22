@@ -15,8 +15,11 @@ _DATA_SUBSETS = [
     "후두장애",
 ]
 
+TOP_SUBDIR_NAME = "01.데이터"
+LABEL_DIR_NAME = "라벨링데이터"
+SOURCE_DIR_NAME = "원천데이터"
 
-def _unpack_korDysarthricSpeech(source_path, subset_type):
+def unpack_dysarthricSpeech(source_path, subset_type):
     ext_archive = ".zip"
     
     assert(subset_type in _DATA_SUBSETS)
@@ -70,7 +73,7 @@ class KORDYSARTHRICSPEECH(Dataset):
 
         root = os.fspath(root)
 
-        _unpack_korDysarthricSpeech(root, subset_type)
+        unpack_dysarthricSpeech(root, subset_type)
 
         self._walker = sorted(str(p.stem) for p in Path(root).glob("*/*/*" + self._ext_audio))
 
