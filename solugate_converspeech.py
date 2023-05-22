@@ -29,7 +29,7 @@ _DATA_SUBSETS = [
 SUBDIR_GETTER = 100000
 INDEX_SUBDIR_GETTER = 1000
 
-def unpack_solugateSpeech(source_path: Union[str, Path], subset_type: str):
+def _unpack_solugateSpeech(source_path: Union[str, Path], subset_type: str):
     ext_archive = '.tar'
         
     if subset_type == 'all':
@@ -104,7 +104,7 @@ class SOLUGATESPEECH(Dataset):
 
         assert(self.subset_type in _DATA_SUBSETS)
 
-        unpack_solugateSpeech(self.dataset_path, self.subset_type)
+        _unpack_solugateSpeech(self.dataset_path, self.subset_type)
         
         if self.subset_type == "all":
             audio_files_path = Path(self.dataset_path).rglob("*"+self._ext_audio)
