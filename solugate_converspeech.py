@@ -6,7 +6,7 @@ from typing import Tuple, Union
 from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_tar, _load_waveform
-from train_spm_base import cleanup_transcript
+from script_normalization import cleanup_transcript
 from common import(
     SAMPLE_RATE,
     TRAIN_SUBDIR_NAME,
