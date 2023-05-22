@@ -6,14 +6,16 @@ python train_spm.py --kor-scripts-path ./datasets
 """
 
 from pathlib import Path
-import json
 from argparse import ArgumentParser, RawTextHelpFormatter
 from script_normalization import(
     cleanup_transcript,
     edit_annotation,
 )
-from solugate_converspeech import unpack_solugateSpeech
-from diquest_normalspeech import unpack_diquestSpeech
+from solugate_converspeech import _unpack_solugateSpeech
+from diquest_normalspeech import(
+    _unpack_diquestSpeech,
+    get_script_from_json,       
+)
 from hallym_dysarthricspeech import(
     # unpack_dysarthricSpeech,
     TOP_SUBDIR_NAME,
@@ -25,14 +27,13 @@ from common import(
     SOLUGATE_DIR_NAME,
     DYSARTHRIC_DIR_NAME,
     TRAIN_SUBDIR_NAME,
+    spm,
 )
 EXT_TYP_KEY = 'ext_typ'
 SEPARATOR_TYP_KEY = 'sep_typ'
 
 JSON_EXT = '.json'
 SCRIPTS_EXT = '_scripts.txt'
-
-import sentencepiece as spm
 
 DATASET_OPTIONS = {
     DIQUEST_DIR_NAME : {EXT_TYP_KEY : JSON_EXT, SEPARATOR_TYP_KEY : ''},
@@ -48,13 +49,6 @@ def get_scripts_from_txt(transcript_path, separator):
             if modified_line is not None:
                 new_list.append(modified_line)
         return new_list
-    
-def get_script_from_json(transcript_path):
-    with open(transcript_path) as f:
-        data = json.load(f)
-        modified_line = edit_annotation(data['발화정보']['stt'].strip('\\'))
-        
-    return modified_line
 
 def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator: str=''):
     
@@ -69,10 +63,10 @@ def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator:
         dataset_path = dataset_path.joinpath(TOP_SUBDIR_NAME, f'1.{TRAIN_SUBDIR_NAME}', LABEL_DIR_NAME)
     elif dataset_name is SOLUGATE_DIR_NAME:
         dataset_path = dataset_path.joinpath(TRAIN_SUBDIR_NAME)
-        unpack_solugateSpeech(dataset_path, 'all')
+        _unpack_solugateSpeech(dataset_path, 'all')
     elif dataset_name is DIQUEST_DIR_NAME:
         dataset_path = dataset_path.joinpath(TRAIN_SUBDIR_NAME)
-        unpack_diquestSpeech(dataset_path)
+        _unpack_diquestSpeech(dataset_path)
     
     
     file_paths = dataset_path.glob(f"*/*{ext}")
