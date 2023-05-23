@@ -29,7 +29,10 @@ def _spelling_rep(text: str):
                 result += segment
             else:
                 if(bool(re.search('\d', curr[0])) and bool(randint(0,1))):
-                    result += curr[1]
+                    try:
+                        result += curr[1]
+                    except:
+                        print(text)
                 else:
                     result += curr[0]
         return result
