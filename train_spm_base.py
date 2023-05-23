@@ -7,17 +7,16 @@ python train_spm.py --kor-scripts-path ./datasets
 
 from pathlib import Path
 from argparse import ArgumentParser, RawTextHelpFormatter
-from script_normalization import(
-    cleanup_transcript,
-    edit_annotation,
+from solugate_converspeech import(
+    _unpack_solugateSpeech,
+    get_scripts_from_labels,
 )
-from solugate_converspeech import _unpack_solugateSpeech
 from diquest_normalspeech import(
     _unpack_diquestSpeech,
-    get_script_from_json,       
+    get_script_from_json,
 )
 from hallym_dysarthricspeech import(
-    # unpack_dysarthricSpeech,
+    _unpack_dysarthricSpeech,
     TOP_SUBDIR_NAME,
     LABEL_DIR_NAME,
 )
@@ -27,8 +26,10 @@ from common import(
     SOLUGATE_DIR_NAME,
     DYSARTHRIC_DIR_NAME,
     TRAIN_SUBDIR_NAME,
-    spm,
 )
+
+import sentencepiece as spm
+
 EXT_TYP_KEY = 'ext_typ'
 SEPARATOR_TYP_KEY = 'sep_typ'
 
@@ -41,14 +42,6 @@ DATASET_OPTIONS = {
     # DYSARTHRIC_DIR_NAME : {EXT_TYP_KEY : '.json', SEPARATOR_TYP_KEY : ''},
 }
 
-def get_scripts_from_txt(transcript_path, separator):
-    new_list = list()
-    with open(transcript_path) as f:
-        for line in f:
-            modified_line = cleanup_transcript(line.split(separator, 1)[-1].strip())
-            if modified_line is not None:
-                new_list.append(modified_line)
-        return new_list
 
 def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator: str=''):
     
@@ -76,9 +69,10 @@ def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator:
             merged_transcripts.append(get_script_from_json(file_path))
     elif ext is SCRIPTS_EXT:
         for file_path in file_paths:
-            merged_transcripts += get_scripts_from_txt(file_path, separator)
+            merged_transcripts += get_scripts_from_labels(file_path, separator)
 
     return merged_transcripts
+
 
 def train_spm(list_of_texts, prefix):
     spm.SentencePieceTrainer.Train(
@@ -124,6 +118,9 @@ def run_cli():
     
     for dataset_name, options in DATASET_OPTIONS.items():
         merged_transcripts += get_transcripts(args.kor_datasets_path, dataset_name, options[EXT_TYP_KEY], options[SEPARATOR_TYP_KEY])        
+
+    with open(r"./aggregated_scripts.txt", 'w') as fp:
+        fp.write('\n'.join(merged_transcripts))
 
     train_spm(merged_transcripts, args.model_prefix)
 
