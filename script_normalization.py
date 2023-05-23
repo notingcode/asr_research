@@ -1,47 +1,24 @@
 import re
+from random import randint
 
-SOLUGATE_SPECIAL_SYMBOLS = re.compile(r"[*+blon.?]")
-SPACES = re.compile(r"\s+")
-SLASH_SEPARATED_PARENS = re.compile("(\([^\)]*\)/\([^\)]*\))")
-INSIDE_PARANS = re.compile("\(([^()]*)\)")
+SOLUGATE_SPECIAL_SYMBOLS = re.compile(r"[/*+blon.?]")
 DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FfNnOoPpSs:]")
-
-def cleanup_transcript(line_of_text):
-    
-    cond = check_parentheses_parsing(line_of_text)
-    if cond == True:
-        return None
-
-    left = line_of_text.count('(')
-    right = line_of_text.count(')')
-    
-    if(left != right or left%2 == 1):
-        return None
-
-    line_of_text = spelling_rep(line_of_text)
-    
-    if(bool(re.search('\d', line_of_text))):
-        return None
-    
-    if('(' in line_of_text or ')' in line_of_text):
-        return None
-
-    line_of_text = SOLUGATE_SPECIAL_SYMBOLS.sub("", line_of_text)
-    line_of_text = SPACES.sub(" ", line_of_text).strip()
-    
-    left = line_of_text.count('(')
-    right = line_of_text.count(')')
-    
-    if(left != right or left%2 == 1):
-        return None
-    
-    if(len(line_of_text) < 5 or len(line_of_text) <= 700):
-        return None
-    
-    return line_of_text
+SPACES = re.compile(r"\s+")
+SLASH_SEPARATED_PARENS = re.compile("(\([^()]*\)/\([^()]*\))")
+INSIDE_PARANS = re.compile("\(([^()]*)\)")
 
 
-def spelling_rep(text):
+def _is_parentheses_matching_error(text: str):
+    left = text.count('(')
+    right = text.count(')')
+    
+    if(left == right):
+        return False
+    
+    return True
+
+
+def _spelling_rep(text: str):
     result = ""
     
     segment_list = SLASH_SEPARATED_PARENS.split(text)
@@ -51,7 +28,7 @@ def spelling_rep(text):
             if(len(curr) == 0):
                 result += segment
             else:
-                if(bool(re.search('\d', curr[0]))):
+                if(bool(re.search('\d', curr[0])) and bool(randint(0,1))):
                     result += curr[1]
                 else:
                     result += curr[0]
@@ -59,19 +36,51 @@ def spelling_rep(text):
     
     return text
 
-def check_parentheses_parsing(x):
-    cond = False
-    partitions = SLASH_SEPARATED_PARENS.split(x)
+
+def _is_parentheses_parse_error(text: str):
+    is_error = False
+    partitions = SLASH_SEPARATED_PARENS.split(text)
     if(len(partitions) != 1):
         for part in partitions:
             curr = INSIDE_PARANS.findall(part)
             for element in curr:
                 if(('(' in element) or (')' in element)):
-                    cond = True
+                    is_error = True
                     break
-    return cond
+                
+    return is_error
 
-def edit_annotation(text):
+
+def solugate_speech_normalize(text: str):
+    '''
+        1. Parantheses inside parantheses check
+        2. Check for incorrect paranthese count match
+        3. 
+    '''
+
+    error = _is_parentheses_parse_error(text)
+    if error:
+        return None
+
+    text = _spelling_rep(text)
+    
+    # if(bool(re.search('\d', line_of_text))):
+    #     return None
+    
+    error = _is_parentheses_matching_error(text)
+    if error:
+        return None
+
+    text = SOLUGATE_SPECIAL_SYMBOLS.sub("", text)
+    text = SPACES.sub(" ", text).strip()
+    
+    if(len(text) < 5 or len(text) > 700):
+        return None
+
+    return text
+
+
+def diquest_speech_normalize(text: str):
     if INSIDE_PARANS.search(text) is not None:
         partition_list = INSIDE_PARANS.split(text)
         for partition in partition_list:
