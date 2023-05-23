@@ -6,7 +6,7 @@ from typing import Tuple, Union
 from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_tar, _load_waveform
-from script_normalization import cleanup_transcript
+from script_normalization import solugate_speech_normalize
 from common import(
     SAMPLE_RATE,
     TRAIN_SUBDIR_NAME,
@@ -28,6 +28,16 @@ _DATA_SUBSETS = [
 
 SUBDIR_GETTER = 100000
 INDEX_SUBDIR_GETTER = 1000
+
+def get_scripts_from_labels(transcript_path, separator):
+    new_list = list()
+    with open(transcript_path) as f:
+        for line in f:
+            modified_line = solugate_speech_normalize(line.split(separator, 1)[-1].strip())
+            if modified_line is not None:
+                new_list.append(modified_line)
+        return new_list
+
 
 def _unpack_solugateSpeech(source_path: Union[str, Path], subset_type: str):
     ext_archive = '.tar'
@@ -64,7 +74,7 @@ def _get_korConverseSpeech_metadata(
 
     # Load text
     with open(transcript_filepath) as f:
-        transcript = cleanup_transcript(f.readline().strip())
+        transcript = solugate_speech_normalize(f.readline().strip())
         if transcript is None:
             # Translation not found
             raise FileNotFoundError(f"Translation not found for {filename}")
@@ -115,7 +125,7 @@ class SOLUGATESPEECH(Dataset):
 
         for path in audio_files_path:
             with open(path.with_suffix(self._ext_txt)) as f:
-                transcript = cleanup_transcript(f.readline().strip())
+                transcript = solugate_speech_normalize(f.readline().strip())
                 if transcript is not None:
                     self._walker.append(path.stem)                        
 

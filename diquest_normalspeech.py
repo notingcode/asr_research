@@ -7,10 +7,8 @@ from typing import Tuple, Union
 from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_zip, _load_waveform
-from script_normalization import(
-    cleanup_transcript,
-    edit_annotation,
-)
+from script_normalization import diquest_speech_normalize
+
 from common import(
     SAMPLE_RATE,
     TRAIN_SUBDIR_NAME,
@@ -18,14 +16,15 @@ from common import(
 )
 
 N_DIRECTORIES_STRIPPED = 0
-SUBDIR_HEADER = "일반남여"
+SUBDIR_HEADER = '일반남여'
 
 def get_script_from_json(transcript_path):
     with open(transcript_path) as f:
         data = json.load(f)
-        modified_line = edit_annotation(data['발화정보']['stt'].strip('\\'))
+        modified_line = diquest_speech_normalize(data['발화정보']['stt'].strip('\\'))
     
     return modified_line
+
 
 def _unpack_diquestSpeech(source_path: Union[str, Path]):
     ext_archive = ".zip"
