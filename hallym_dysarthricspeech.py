@@ -19,7 +19,7 @@ TOP_SUBDIR_NAME = "01.데이터"
 LABEL_DIR_NAME = "라벨링데이터"
 SOURCE_DIR_NAME = "원천데이터"
 
-def unpack_dysarthricSpeech(source_path, subset_type):
+def _unpack_dysarthricSpeech(source_path, subset_type):
     ext_archive = ".zip"
     
     assert(subset_type in _DATA_SUBSETS)
@@ -71,13 +71,14 @@ class KORDYSARTHRICSPEECH(Dataset):
         subset_type: str = 'all',
     ) -> None:
 
-        root = os.fspath(root)
+        self._root = os.fspath(root)
+        self._path = self._root
 
-        unpack_dysarthricSpeech(root, subset_type)
+        _unpack_dysarthricSpeech(root, subset_type)
 
         self._walker = sorted(str(p.stem) for p in Path(root).glob("*/*/*" + self._ext_audio))
 
-    def get_metadata(self, n: int) -> Tuple[str, int, str, int, int, int]:
+    def get_metadata(self, n: int) -> Tuple[str, int, str]:
         """Get metadata for the n-th sample from the dataset. Returns filepath instead of waveform,
         but otherwise returns the same fields as :py:func:`__getitem__`.
 
@@ -95,9 +96,9 @@ class KORDYSARTHRICSPEECH(Dataset):
                 Transcript
         """
         fileid = self._walker[n]
-        return _get_korDysarthricSpeech_metadata(fileid, self._archive, self._path, self._ext_audio, self._ext_json)
+        return _get_korDysarthricSpeech_metadata(fileid, self._root, self._path, self._ext_audio, self._ext_json)
 
-    def __getitem__(self, n: int) -> Tuple[Tensor, int, str, int, int, int]:
+    def __getitem__(self, n: int) -> Tuple[Tensor, int, str]:
         """Load the n-th sample from the dataset.
 
         Args:
