@@ -1,10 +1,10 @@
 __pycache__
 .conda
 .vscode
-metadata_base
-metadata_disabled
+metadata_*
 base
 test
 *.txt
 base.model
 base.vocab
+experiments

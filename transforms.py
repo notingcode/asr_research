@@ -6,7 +6,7 @@ from typing import List
 import sentencepiece as spm
 import torch
 import torchaudio
-from data_module import korConverseSpeechDataModule
+from data_module import korSpeechDataModule
 from lightning import Batch
 
 
@@ -111,8 +111,8 @@ def get_data_module(korspeech_path, global_stats_path, sp_model_path):
     train_transform = TrainTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
     val_transform = ValTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
     test_transform = TestTransform(global_stats_path=global_stats_path, sp_model_path=sp_model_path)
-    return korConverseSpeechDataModule(
-        kor_conversespeech_path=korspeech_path,
+    return korSpeechDataModule(
+        korspeech_path=korspeech_path,
         train_transform=train_transform,
         val_transform=val_transform,
         test_transform=test_transform,

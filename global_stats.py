@@ -9,8 +9,8 @@ import json
 import logging
 import pathlib
 from argparse import ArgumentParser, RawTextHelpFormatter
-import korConverseSpeech
-import korDysarthricSpeech
+import solugate_converspeech
+import hallym_dysarthricspeech
 
 import torch
 import torchaudio
@@ -70,13 +70,13 @@ def get_dataset(args):
     if args.model_type == MODEL_BASE:
         return torch.utils.data.ConcatDataset(
             [
-                # korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, True, "hobby"),
-                korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, True, "dialog"),
-                # korConverseSpeech.KORCONVERSESPEECH(args.dataset_path, True, "play"),
+                # korSpeechSolugate.KORCONVERSESPEECH(args.dataset_path, True, "hobby"),
+                solugate_converspeech.SOLUGATESPEECH(args.dataset_path, True, "dialog"),
+                # korSpeechSolugate.KORCONVERSESPEECH(args.dataset_path, True, "play"),
             ]
         )
     elif args.model_type == MODEL_DISABLED:
-        return korDysarthricSpeech.KORDYSARTHRICSPEECH(args.dataset_path, subset_type="train")
+        return hallym_dysarthricspeech.KORDYSARTHRICSPEECH(args.dataset_path, subset_type="train")
     else:
         raise ValueError(f"Encountered unsupported model type {args.model_type}.")
 
