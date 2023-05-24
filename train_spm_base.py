@@ -9,11 +9,11 @@ from pathlib import Path
 from argparse import ArgumentParser, RawTextHelpFormatter
 from solugate_converspeech import(
     _unpack_solugateSpeech,
-    get_scripts_from_labels,
+    _get_scripts_from_labels,
 )
 from diquest_normalspeech import(
     _unpack_diquestSpeech,
-    get_script_from_json,
+    _get_script_from_json,
 )
 from hallym_dysarthricspeech import(
     _unpack_dysarthricSpeech,
@@ -66,10 +66,10 @@ def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator:
 
     if ext is JSON_EXT:
         for file_path in file_paths:
-            merged_transcripts.append(get_script_from_json(file_path))
+            merged_transcripts.append(_get_script_from_json(file_path))
     elif ext is SCRIPTS_EXT:
         for file_path in file_paths:
-            merged_transcripts += get_scripts_from_labels(file_path, separator)
+            merged_transcripts += _get_scripts_from_labels(file_path, separator)
 
     return merged_transcripts
 
