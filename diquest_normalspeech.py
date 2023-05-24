@@ -18,7 +18,7 @@ from common import(
 N_DIRECTORIES_STRIPPED = 0
 SUBDIR_HEADER = '일반남여'
 
-def get_script_from_json(transcript_path):
+def _get_script_from_json(transcript_path):
     with open(transcript_path) as f:
         data = json.load(f)
         modified_line = diquest_speech_normalize(data['발화정보']['stt'].strip('\\'))
@@ -54,7 +54,7 @@ def _get_korConverseSpeech_metadata(
     audio_filepath = os.path.join(dataset_path, subdir_name, audio_filename)
 
     # Load text
-    transcript = get_script_from_json(transcript_path)
+    transcript = _get_script_from_json(transcript_path)
     if transcript is None:
         # Translation not found
         raise FileNotFoundError(f"Translation not found for {filename}")

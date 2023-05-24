@@ -29,7 +29,7 @@ _DATA_SUBSETS = [
 SUBDIR_GETTER = 100000
 INDEX_SUBDIR_GETTER = 1000
 
-def get_scripts_from_labels(transcript_path, separator):
+def _get_scripts_from_labels(transcript_path, separator):
     new_list = list()
     with open(transcript_path) as f:
         for line in f:
