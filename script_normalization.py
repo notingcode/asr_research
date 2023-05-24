@@ -19,6 +19,7 @@ def _is_parentheses_matching_error(text: str):
 
 
 def _spelling_rep(text: str):
+    
     result = ""
     
     segment_list = SLASH_SEPARATED_PARENS.split(text)
@@ -33,6 +34,7 @@ def _spelling_rep(text: str):
                         result += curr[1]
                     except:
                         print(text)
+                        result += curr[0]
                 else:
                     result += curr[0]
         return result
@@ -62,6 +64,10 @@ def solugate_speech_normalize(text: str):
     '''
 
     error = _is_parentheses_parse_error(text)
+    if error:
+        return None
+
+    error = _is_parentheses_matching_error(text)
     if error:
         return None
 
