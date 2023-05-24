@@ -1,14 +1,14 @@
 import re
 from random import randint
 
-SOLUGATE_SPECIAL_SYMBOLS = re.compile(r"[/*+blon.?]")
+SOLUGATE_SPECIAL_SYMBOLS = re.compile(r"[{}/*+blon.?]")
 DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FfNnOoPpSs:]")
 SPACES = re.compile(r"\s+")
 SLASH_SEPARATED_PARENS = re.compile("(\([^()]*\)/\([^()]*\))")
 INSIDE_PARANS = re.compile("\(([^()]*)\)")
 
 
-def _is_parentheses_matching_error(text: str):
+def _is_spelling_decision_error(text: str):
     left = text.count('(')
     right = text.count(')')
     
@@ -20,24 +20,29 @@ def _is_parentheses_matching_error(text: str):
 
 def _spelling_rep(text: str):
     
+    is_error = _is_spelling_decision_error(text)
+    if is_error:
+        return None
+    
     result = ""
     
     segment_list = SLASH_SEPARATED_PARENS.split(text)
+    print(segment_list)
     if(len(segment_list) != 1):
         for segment in segment_list:
             curr = INSIDE_PARANS.findall(segment)
-            if(len(curr) == 0):
-                result += segment
+            if(((len(curr) == 0) or (len(curr) % 2 == 1))):
+                result += INSIDE_PARANS.sub("", segment)
             else:
+                try:
+                    curr[1]
+                except:
+                    return None
                 if(bool(re.search('\d', curr[0])) and bool(randint(0,1))):
-                    try:
-                        result += curr[1]
-                    except:
-                        print(text)
-                        result += curr[0]
+                    result += curr[1]
                 else:
                     result += curr[0]
-        return result
+        text = result
     
     return text
 
@@ -67,17 +72,10 @@ def solugate_speech_normalize(text: str):
     if error:
         return None
 
-    error = _is_parentheses_matching_error(text)
-    if error:
-        return None
-
-    text = _spelling_rep(text)
-    
-    # if(bool(re.search('\d', line_of_text))):
-    #     return None
-    
-    error = _is_parentheses_matching_error(text)
-    if error:
+    modified_text = _spelling_rep(text)
+    if modified_text is not None:
+        text = modified_text
+    else:
         return None
 
     text = SOLUGATE_SPECIAL_SYMBOLS.sub("", text)
