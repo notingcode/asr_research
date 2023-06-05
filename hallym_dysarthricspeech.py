@@ -1,33 +1,33 @@
 import os
 import multiprocessing as mp
+import json
 from pathlib import Path
 from typing import Tuple, Union
 
 from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_zip, _load_waveform
-from common import SAMPLE_RATE
+from common import(
+    SAMPLE_RATE,
+    TRAIN_SUBDIR_NAME,
+    VALID_SUBDIR_NAME,
+)
 
-N_DIRECTORIES_STRIPPED = 0
-_DATA_SUBSETS = [
-    "뇌신경장애",
-    "언어청각장애",
-    "후두장애",
-]
+N_DIRECTORIES_STRIPPED = 1
 
 TOP_SUBDIR_NAME = "01.데이터"
 LABEL_DIR_NAME = "라벨링데이터"
 SOURCE_DIR_NAME = "원천데이터"
 
-def _unpack_dysarthricSpeech(source_path, subset_type):
+def _get_script_from_json(transcript_path):
+    with open(transcript_path) as f:
+        data = json.load(f)
+        return data['Transcript'].strip()
+
+def _unpack_dysarthricSpeech(datasets_parentPath):
     ext_archive = ".zip"
-    
-    assert(subset_type in _DATA_SUBSETS)
-    
-    if subset_type == "all":
-        zip_files = Path(source_path).glob(f"*{ext_archive}")
-    else:
-        zip_files = Path(source_path).glob(f"*{subset_type}{ext_archive}")
+
+    zip_files = Path(datasets_parentPath).glob(f"*/*{ext_archive}")
     
     args = []
     
@@ -40,15 +40,19 @@ def _unpack_dysarthricSpeech(source_path, subset_type):
 
 
 def _get_korDysarthricSpeech_metadata(
-    fileid: str, root: str, folder: str, ext_audio: str, ext_json: str
+    relative_filepath: str, dataset_path: str, ext_audio: str, ext_script: str
 ) -> Tuple[str, int, str]:
     
-    filepath = fileid
+    audio_relative_filepath = f"{relative_filepath}{ext_audio}"
+    script_relative_filepath = f"{relative_filepath}{ext_script}"
     
-    transcript = ""
+    audio_filepath = os.path.join(dataset_path, SOURCE_DIR_NAME, audio_relative_filepath)
+    transcript_filepath = os.path.join(dataset_path, LABEL_DIR_NAME, script_relative_filepath)
+    
+    transcript = _get_script_from_json(transcript_filepath)
 
     return (
-        filepath,
+        audio_filepath,
         SAMPLE_RATE,
         transcript,
     )
@@ -68,15 +72,25 @@ class KORDYSARTHRICSPEECH(Dataset):
     def __init__(
         self,
         root: Union[str, Path],
-        subset_type: str = 'all',
+        training: bool,
     ) -> None:
 
-        self._root = os.fspath(root)
-        self._path = self._root
+        self.root = os.fspath(root)
+        
+        if training:
+            dataset_path = os.path.join(root, TOP_SUBDIR_NAME, f"1.{TRAIN_SUBDIR_NAME}")
+        else:
+            dataset_path = os.path.join(root, TOP_SUBDIR_NAME, f"2.{VALID_SUBDIR_NAME}")
 
-        _unpack_dysarthricSpeech(root, subset_type)
+        self.dataset_path = dataset_path
+        self.audio_dataset_path = os.path.join(self.dataset_path, SOURCE_DIR_NAME)
+        
+        _unpack_dysarthricSpeech(self.dataset_path)
 
-        self._walker = sorted(str(p.stem) for p in Path(root).glob("*/*/*" + self._ext_audio))
+        audio_files_path = Path(self.audio_dataset_path).glob("*/*"+self._ext_audio)
+
+        self._walker = [audio_filepath.relative_to(self.audio_dataset_path).as_posix().rsplit(".")[0] for audio_filepath in audio_files_path]
+
 
     def get_metadata(self, n: int) -> Tuple[str, int, str]:
         """Get metadata for the n-th sample from the dataset. Returns filepath instead of waveform,
@@ -95,8 +109,9 @@ class KORDYSARTHRICSPEECH(Dataset):
             str:
                 Transcript
         """
-        fileid = self._walker[n]
-        return _get_korDysarthricSpeech_metadata(fileid, self._root, self._path, self._ext_audio, self._ext_json)
+        relative_filepath = self._walker[n]
+        return _get_korDysarthricSpeech_metadata(relative_filepath, self.dataset_path, self._ext_audio, self._ext_json)
+
 
     def __getitem__(self, n: int) -> Tuple[Tensor, int, str]:
         """Load the n-th sample from the dataset.
@@ -117,6 +132,7 @@ class KORDYSARTHRICSPEECH(Dataset):
         metadata = self.get_metadata(n)
         waveform = _load_waveform(metadata[0], metadata[1])
         return (waveform, ) + metadata[1:]
+
 
     def __len__(self) -> int:
         return len(self._walker)
