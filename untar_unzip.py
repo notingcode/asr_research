@@ -13,7 +13,7 @@ import torchaudio
 
 _resampler = torchaudio.transforms.Resample(DYS_SAMPLE_RATE, SAMPLE_RATE, lowpass_filter_width=12)
 
-def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 9,) -> List[str]:
+def _extract_tar(from_path: str, to_path: Optional[str] = None, overwrite: bool = False, n_directories_stripped: int = 0,) -> List[str]:
     if to_path is None:
         to_path = os.path.dirname(from_path)
     
