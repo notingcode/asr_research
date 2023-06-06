@@ -2,7 +2,7 @@ import os
 import multiprocessing as mp
 import json
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Tuple
 
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -13,8 +13,6 @@ from common import(
     VALID_SUBDIR_NAME,
 )
 
-N_DIRECTORIES_STRIPPED = 1
-
 TOP_SUBDIR_NAME = "01.데이터"
 LABEL_DIR_NAME = "라벨링데이터"
 SOURCE_DIR_NAME = "원천데이터"
@@ -24,7 +22,7 @@ def _get_script_from_json(transcript_path):
         data = json.load(f)
         return data['Transcript'].strip()
 
-def _unpack_dysarthricSpeech(datasets_parentPath):
+def _unpack_dysarthricSpeech(datasets_parentPath, n_directories_stripped: int=1):
     ext_archive = ".zip"
 
     zip_files = Path(datasets_parentPath).glob(f"*/*{ext_archive}")
@@ -32,7 +30,7 @@ def _unpack_dysarthricSpeech(datasets_parentPath):
     args = []
     
     for file in zip_files:
-        args.append((file.as_posix(), file.with_suffix("").as_posix(), N_DIRECTORIES_STRIPPED))
+        args.append((file.as_posix(), file.with_suffix("").as_posix(), n_directories_stripped))
     
     pool = mp.Pool(min(mp.cpu_count(), len(args)))
     
@@ -71,7 +69,7 @@ class KORDYSARTHRICSPEECH(Dataset):
 
     def __init__(
         self,
-        root: Union[str, Path],
+        root: str | Path,
         training: bool,
     ) -> None:
 

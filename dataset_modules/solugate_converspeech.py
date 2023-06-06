@@ -1,19 +1,18 @@
 import os
 import multiprocessing as mp
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Tuple
 
 from torch import Tensor
 from torch.utils.data import Dataset
 from untar_unzip import _extract_tar, _load_waveform
-from script_normalization import solugate_speech_normalize
+from script_normalization import etri_normalize
 from common import(
     SAMPLE_RATE,
     TRAIN_SUBDIR_NAME,
     VALID_SUBDIR_NAME,
 )
 
-N_DIRECTORIES_STRIPPED = 9
 _DATA_SUBSETS = [
     "broadcast",
     "hobby",
@@ -29,17 +28,17 @@ _DATA_SUBSETS = [
 SUBDIR_GETTER = 100000
 INDEX_SUBDIR_GETTER = 1000
 
-def _get_scripts_from_labels(transcript_path, separator):
+def _get_all_scripts(transcript_path, separator):
     new_list = list()
     with open(transcript_path) as f:
         for line in f:
-            modified_line = solugate_speech_normalize(line.split(separator, 1)[-1].strip())
+            modified_line = etri_normalize(line.split(separator, 1)[-1].strip())
             if modified_line is not None:
                 new_list.append(modified_line)
         return new_list
 
 
-def _unpack_solugateSpeech(source_path: Union[str, Path], subset_type: str):
+def _unpack_solugateSpeech(source_path: str | Path, subset_type: str, n_directories_stripped: int=9):
     ext_archive = '.tar'
         
     if subset_type == 'all':
@@ -50,7 +49,7 @@ def _unpack_solugateSpeech(source_path: Union[str, Path], subset_type: str):
     args = []
     
     for file in tar_files:
-        args.append((file.as_posix(), source_path, False, N_DIRECTORIES_STRIPPED))
+        args.append((file.as_posix(), source_path, False, n_directories_stripped))
     
     pool = mp.Pool(min(mp.cpu_count(), len(args)))
     
@@ -74,7 +73,7 @@ def _get_korConverseSpeech_metadata(
 
     # Load text
     with open(transcript_filepath) as f:
-        transcript = solugate_speech_normalize(f.readline().strip())
+        transcript = etri_normalize(f.readline().strip())
         if transcript is None:
             # Translation not found
             raise FileNotFoundError(f"Translation not found for {filename}")
@@ -98,7 +97,7 @@ class SOLUGATESPEECH(Dataset):
 
     def __init__(
         self,
-        root: Union[str, Path],
+        root: str | Path,
         training: bool,
         subset_type: str,
     ) -> None:
@@ -125,7 +124,7 @@ class SOLUGATESPEECH(Dataset):
 
         for path in audio_files_path:
             with open(path.with_suffix(self._ext_txt)) as f:
-                transcript = solugate_speech_normalize(f.readline().strip())
+                transcript = etri_normalize(f.readline().strip())
                 if transcript is not None:
                     self._walker.append(path.stem)                        
 

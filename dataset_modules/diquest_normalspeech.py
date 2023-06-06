@@ -2,7 +2,7 @@ import os
 import multiprocessing as mp
 import json
 from pathlib import Path
-from typing import Tuple, Union
+from typing import Tuple
 
 from torch import Tensor
 from torch.utils.data import Dataset
@@ -15,7 +15,6 @@ from common import(
     VALID_SUBDIR_NAME,
 )
 
-N_DIRECTORIES_STRIPPED = 0
 SUBDIR_HEADER = '일반남여'
 
 def _get_script_from_json(transcript_path):
@@ -26,7 +25,7 @@ def _get_script_from_json(transcript_path):
     return modified_line
 
 
-def _unpack_diquestSpeech(source_path: Union[str, Path]):
+def _unpack_diquestSpeech(source_path: str | Path, n_directories_stripped: int=0):
     ext_archive = ".zip"
         
     zip_files = Path(source_path).glob(f"*{ext_archive}")
@@ -34,7 +33,7 @@ def _unpack_diquestSpeech(source_path: Union[str, Path]):
     args = []
     
     for file in zip_files:
-        args.append((file.as_posix(), source_path, False, N_DIRECTORIES_STRIPPED))
+        args.append((file.as_posix(), source_path, False, n_directories_stripped))
     
     pool = mp.Pool(min(mp.cpu_count(), len(args)))
     
@@ -78,7 +77,7 @@ class DIQUESTSPEECH(Dataset):
 
     def __init__(
         self,
-        root: Union[str, Path],
+        root: str | Path,
         training: bool,
     ) -> None:
         self.root = os.fspath(root)
