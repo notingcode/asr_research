@@ -8,3 +8,5 @@ base.model
 base.vocab
 speech_data
 experiments
+*.ipynb
+*.trn
