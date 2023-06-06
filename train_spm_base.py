@@ -2,29 +2,36 @@
 """Trains a SentencePiece model on transcripts.
 
 Example:
-python train_spm.py --kor-scripts-path ./datasets
+python train_spm.py --kor-datasets-path ./datasets
 """
 
 from pathlib import Path
 from argparse import ArgumentParser, RawTextHelpFormatter
-from solugate_converspeech import(
+from dataset_modules.solugate_converspeech import(
     _unpack_solugateSpeech,
-    _get_scripts_from_labels,
+    _get_all_scripts as get_solugate_scripts,
 )
-from diquest_normalspeech import(
+from dataset_modules.diquest_normalspeech import(
     _unpack_diquestSpeech,
     _get_script_from_json,
 )
-from hallym_dysarthricspeech import(
+from dataset_modules.hallym_dysarthricspeech import(
     _unpack_dysarthricSpeech,
     TOP_SUBDIR_NAME,
     LABEL_DIR_NAME,
+)
+from dataset_modules.etri_converspeech import(
+    _unpack_etriSpeech,
+    _get_all_scripts as get_etri_scripts,
+    _SCRIPTS_FILES_DIR,
+    _TRAIN_SCRIPT_FILENAME,
 )
 
 from common import(
     DIQUEST_DIR_NAME,
     SOLUGATE_DIR_NAME,
     DYSARTHRIC_DIR_NAME,
+    ETRI_DIR_NAME,
     TRAIN_SUBDIR_NAME,
 )
 
@@ -35,11 +42,12 @@ SEPARATOR_TYP_KEY = 'sep_typ'
 
 JSON_EXT = '.json'
 SCRIPTS_EXT = '_scripts.txt'
+TRN_EXT = '.trn'
 
 DATASET_OPTIONS = {
-    DIQUEST_DIR_NAME : {EXT_TYP_KEY : JSON_EXT, SEPARATOR_TYP_KEY : ''},
-    SOLUGATE_DIR_NAME : {EXT_TYP_KEY : SCRIPTS_EXT, SEPARATOR_TYP_KEY : ' :: '},
-    # DYSARTHRIC_DIR_NAME : {EXT_TYP_KEY : '.json', SEPARATOR_TYP_KEY : ''},
+    # DIQUEST_DIR_NAME : {EXT_TYP_KEY : JSON_EXT, SEPARATOR_TYP_KEY : ''},
+    # SOLUGATE_DIR_NAME : {EXT_TYP_KEY : SCRIPTS_EXT, SEPARATOR_TYP_KEY : '::'},
+    ETRI_DIR_NAME : {EXT_TYP_KEY : TRN_EXT, SEPARATOR_TYP_KEY : '::'},
 }
 
 
@@ -54,22 +62,31 @@ def get_transcripts(datasets_path: Path, dataset_name: str, ext: str, separator:
     
     if dataset_name is DYSARTHRIC_DIR_NAME:
         dataset_path = dataset_path.joinpath(TOP_SUBDIR_NAME, f'1.{TRAIN_SUBDIR_NAME}', LABEL_DIR_NAME)
+        search_str = f"*/*{ext}"
     elif dataset_name is SOLUGATE_DIR_NAME:
         dataset_path = dataset_path.joinpath(TRAIN_SUBDIR_NAME)
-        _unpack_solugateSpeech(dataset_path, 'all')
+        _unpack_etriSpeech(dataset_path, 'all')
+        search_str = f"*/*{ext}"
     elif dataset_name is DIQUEST_DIR_NAME:
         dataset_path = dataset_path.joinpath(TRAIN_SUBDIR_NAME)
         _unpack_diquestSpeech(dataset_path)
+        search_str = f"*/*{ext}"
+    elif dataset_name is ETRI_DIR_NAME:
+        dataset_path = dataset_path.joinpath(_SCRIPTS_FILES_DIR)
+        _unpack_etriSpeech(dataset_path)
+        search_str = f"{_TRAIN_SCRIPT_FILENAME}{ext}"
     
-    
-    file_paths = dataset_path.glob(f"*/*{ext}")
+    file_paths = dataset_path.glob(search_str)
 
     if ext is JSON_EXT:
         for file_path in file_paths:
             merged_transcripts.append(_get_script_from_json(file_path))
     elif ext is SCRIPTS_EXT:
         for file_path in file_paths:
-            merged_transcripts += _get_scripts_from_labels(file_path, separator)
+            merged_transcripts += get_solugate_scripts(file_path, separator)
+    elif ext is TRN_EXT:
+        for file_path in file_paths:
+            merged_transcripts += get_etri_scripts(file_path, separator)
 
     return merged_transcripts
 

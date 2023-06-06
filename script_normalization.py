@@ -8,7 +8,7 @@ SLASH_SEPARATED_PARENS = re.compile("(\([^()]*\)/\([^()]*\))")
 INSIDE_PARANS = re.compile("\(([^()]*)\)")
 
 
-def _is_spelling_decision_error(text: str):
+def _check_paren_match(text: str):
     left = text.count('(')
     right = text.count(')')
     
@@ -20,14 +20,13 @@ def _is_spelling_decision_error(text: str):
 
 def _spelling_rep(text: str):
     
-    is_error = _is_spelling_decision_error(text)
+    is_error = _check_paren_match(text)
     if is_error:
         return None
     
     result = ""
     
     segment_list = SLASH_SEPARATED_PARENS.split(text)
-    print(segment_list)
     if(len(segment_list) != 1):
         for segment in segment_list:
             curr = INSIDE_PARANS.findall(segment)
@@ -35,19 +34,19 @@ def _spelling_rep(text: str):
                 result += INSIDE_PARANS.sub("", segment)
             else:
                 try:
-                    curr[1]
+                    if(bool(re.search('\d', curr[0])) and bool(randint(0,1))):
+                        result += curr[1]
+                    else:
+                        result += curr[0]
                 except:
+                    print(curr)
                     return None
-                if(bool(re.search('\d', curr[0])) and bool(randint(0,1))):
-                    result += curr[1]
-                else:
-                    result += curr[0]
         text = result
     
     return text
 
 
-def _is_parentheses_parse_error(text: str):
+def _check_parse_error(text: str):
     is_error = False
     partitions = SLASH_SEPARATED_PARENS.split(text)
     if(len(partitions) != 1):
@@ -61,14 +60,14 @@ def _is_parentheses_parse_error(text: str):
     return is_error
 
 
-def solugate_speech_normalize(text: str):
+def etri_normalize(text: str):
     '''
         1. Parantheses inside parantheses check
         2. Check for incorrect paranthese count match
         3. 
     '''
 
-    error = _is_parentheses_parse_error(text)
+    error = _check_parse_error(text)
     if error:
         return None
 
@@ -80,9 +79,6 @@ def solugate_speech_normalize(text: str):
 
     text = SOLUGATE_SPECIAL_SYMBOLS.sub("", text)
     text = SPACES.sub(" ", text).strip()
-    
-    if(len(text) < 5 or len(text) > 700):
-        return None
 
     return text
 
