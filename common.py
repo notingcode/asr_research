@@ -10,8 +10,8 @@ from torchaudio.models import Hypothesis
 
 MODEL_BASE = "base"
 MODEL_DISABLED = "disabled"
-SAMPLE_RATE = 16000
-DYS_SAMPLE_RATE = 44100
+SAMPLE_RATE = int(16000)
+DYS_SAMPLE_RATE = int(44100)
 
 TRAIN_SUBDIR_NAME = "Training"
 VALID_SUBDIR_NAME = "Validation"
@@ -19,6 +19,7 @@ VALID_SUBDIR_NAME = "Validation"
 DIQUEST_DIR_NAME = "자유대화 음성(일반남녀)"
 SOLUGATE_DIR_NAME = "한국인 대화 음성"
 DYSARTHRIC_DIR_NAME = "013.구음장애 음성인식 데이터"
+ETRI_DIR_NAME = "한국어 음성"
 
 DECIBEL = 2 * 20 * math.log10(torch.iinfo(torch.int16).max)
 GAIN = pow(10, 0.05 * DECIBEL)
