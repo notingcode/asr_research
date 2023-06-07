@@ -1,7 +1,7 @@
 import re
 from random import randint
 
-SOLUGATE_SPECIAL_SYMBOLS = re.compile(r"[{}/*+blon.?]")
+ETRI_SPECIAL_SYMBOLS = re.compile(r"[{}/*+blon.,?]")
 DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FfNnOoPpSs:]")
 SPACES = re.compile(r"\s+")
 SLASH_SEPARATED_PARENS = re.compile("(\([^()]*\)/\([^()]*\))")
@@ -78,7 +78,7 @@ def etri_normalize(text: str):
     else:
         return None
 
-    text = SOLUGATE_SPECIAL_SYMBOLS.sub("", text)
+    text = ETRI_SPECIAL_SYMBOLS.sub("", text)
     text = SPACES.sub(" ", text).strip()
 
     return text
