@@ -24,6 +24,7 @@ def _spelling_rep(text: str):
     if is_error:
         return None
     
+    is_spelling = bool(randint(0,1))
     result = ""
     
     segment_list = SLASH_SEPARATED_PARENS.split(text)
@@ -34,7 +35,7 @@ def _spelling_rep(text: str):
                 result += INSIDE_PARANS.sub("", segment)
             else:
                 try:
-                    if(bool(re.search('\d', curr[0])) and bool(randint(0,1))):
+                    if(bool(re.search('\d', curr[0])) and is_spelling):
                         result += curr[1]
                     else:
                         result += curr[0]
