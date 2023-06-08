@@ -1,8 +1,8 @@
 import re
 from random import randint
 
-ETRI_SPECIAL_SYMBOLS = re.compile(r"[{}/*+blon.,?]")
-DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FfNnOoPpSs:]")
+ETRI_SPECIAL_SYMBOLS = re.compile(r"[{}/*+.,?]|b/|l/|o/|n/|u/")
+DIQUEST_SPECIAL_SYMBOLS = re.compile(r"[*FfNnOoPpSs:.,?]")
 SPACES = re.compile(r"\s+")
 SLASH_SEPARATED_PARENS = re.compile("(\([^()]*\)/\([^()]*\))")
 INSIDE_PARANS = re.compile("\(([^()]*)\)")
