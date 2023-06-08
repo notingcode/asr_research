@@ -10,10 +10,10 @@ import logging
 import pathlib
 from argparse import ArgumentParser, RawTextHelpFormatter
 import solugate_converspeech
-import hallym_dysarthricspeech
+import dataset_modules.diquest_normalspeech as diquest_normalspeech
+import dataset_modules.hallym_dysarthricspeech as hallym_dysarthricspeech
 
 import torch
-import torchaudio
 from common import (
     MODEL_BASE,
     MODEL_DISABLED,
@@ -33,7 +33,7 @@ def parse_args():
         "--dataset-path",
         required=True,
         type=pathlib.Path,
-        help="Path to dataset. ",
+        help="Path to dataset.",
     )
     parser.add_argument(
         "--output-path",
@@ -70,13 +70,12 @@ def get_dataset(args):
     if args.model_type == MODEL_BASE:
         return torch.utils.data.ConcatDataset(
             [
-                # korSpeechSolugate.KORCONVERSESPEECH(args.dataset_path, True, "hobby"),
-                solugate_converspeech.SOLUGATESPEECH(args.dataset_path, True, "dialog"),
-                # korSpeechSolugate.KORCONVERSESPEECH(args.dataset_path, True, "play"),
+                solugate_converspeech.ETRISPEECH(args.dataset_path, True, "dialog"),
+                diquest_normalspeech.DIQUESTSPEECH(args.dataset_path, True),
             ]
         )
     elif args.model_type == MODEL_DISABLED:
-        return hallym_dysarthricspeech.KORDYSARTHRICSPEECH(args.dataset_path, subset_type="train")
+        return hallym_dysarthricspeech.KORDYSARTHRICSPEECH(args.dataset_path, True, subset_type="뇌신경장애")
     else:
         raise ValueError(f"Encountered unsupported model type {args.model_type}.")
 

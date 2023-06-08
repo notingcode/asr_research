@@ -3,12 +3,12 @@ import random
 
 import torch
 from pytorch_lightning import LightningDataModule
-import solugate_converspeech
-import diquest_normalspeech
-import hallym_dysarthricspeech
+import dataset_modules.etri_converspeech as etri_converspeech
+import dataset_modules.solugate_converspeech as solugate_converspeech
+import dataset_modules.diquest_normalspeech as diquest_normalspeech
+import dataset_modules.hallym_dysarthricspeech as hallym_dysarthricspeech
 from script_normalization import cleanup_transcript
 from solugate_converspeech import SUBDIR_GETTER
-
 
 def _batch_by_token_count(idx_target_lengths, max_tokens, batch_size=None):
     batches = []
@@ -32,6 +32,12 @@ def _batch_by_token_count(idx_target_lengths, max_tokens, batch_size=None):
 def get_sample_lengths(korspeech_dataset):
     fileid_to_target_length = {}
     
+    def _etri_target_length(filename: str):
+        pass
+    def _diquest_length(filename: str):
+        pass
+    def _hallym_target_length(filename: str):
+        pass
     def _solugate_target_length(filename: str):
         if filename not in fileid_to_target_length:
             subset_type, index = filename.split("_")      
@@ -50,20 +56,17 @@ def get_sample_lengths(korspeech_dataset):
                     transcript = cleanup_transcript(transcript.strip())
                     if transcript is not None:
                         fileid_to_target_length[fileid_text] = len(transcript)
-        
+
         return fileid_to_target_length[filename]
-    def _diquest_length(filename: str):
-        pass
-    def _hallym_target_length(filename: str):
-        pass
-    
+
     if isinstance(korspeech_dataset, solugate_converspeech.SOLUGATESPEECH):
         return [_solugate_target_length(filename) for filename in korspeech_dataset._walker]
     elif isinstance(korspeech_dataset, diquest_normalspeech.DIQUESTSPEECH):
         return [_diquest_length(filename) for filename in korspeech_dataset._walker]
     elif isinstance(korspeech_dataset, hallym_dysarthricspeech.KORDYSARTHRICSPEECH):
         return [_hallym_target_length(filename) for filename in korspeech_dataset._walker]
-
+    elif isinstance(korspeech_dataset, hallym_dysarthricspeech.KORDYSARTHRICSPEECH):
+        return [_etri_target_length(filename) for filename in korspeech_dataset._walker]
 
 class CustomBucketDataset(torch.utils.data.Dataset):
     def __init__(
@@ -123,7 +126,7 @@ class TransformDataset(torch.utils.data.Dataset):
 
 
 class korSpeechDataModule(LightningDataModule):
-    solugatespeech_cls = solugate_converspeech.SOLUGATESPEECH
+    etrispeech_cls = etri_converspeech.ETRISPEECH
 
     def __init__(
         self,
@@ -153,9 +156,7 @@ class korSpeechDataModule(LightningDataModule):
 
     def train_dataloader(self):
         datasets = [
-            # self.solugatespeech_cls(self.korspeech_path, True, "hobby"),
-            self.solugatespeech_cls(self.korspeech_path, True, "dialog"),
-            # self.solugatespeech_cls(self.korspeech_path, True, "play"),
+            self.etrispeech_cls(self.korspeech_path, True),
         ]
 
         if not self.train_dataset_lengths:
@@ -184,9 +185,7 @@ class korSpeechDataModule(LightningDataModule):
 
     def val_dataloader(self):
         datasets = [
-            # self.solugatespeech_cls(self.korspeech_path, False, "hobby"),
-            self.solugatespeech_cls(self.korspeech_path, False, "dialog"),
-            # self.solugatespeech_cls(self.korspeech_path, False, "play"),
+            self.etrispeech_cls(self.korspeech_path, False),
         ]
 
         if not self.val_dataset_lengths:
@@ -209,7 +208,7 @@ class korSpeechDataModule(LightningDataModule):
         return dataloader
 
     def test_dataloader(self):
-        dataset = self.solugatespeech_cls(self.korspeech_path, False, "life")
+        dataset = self.etrispeech_cls(self.korspeech_path, False)
         dataset = TransformDataset(dataset, self.test_transform)
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=None)
         return dataloader
