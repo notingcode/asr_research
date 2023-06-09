@@ -35,7 +35,7 @@ def _spelling_rep(text: str):
                 result += INSIDE_PARANS.sub("", segment)
             else:
                 try:
-                    if(bool(re.search('\d', curr[0])) and is_spelling):
+                    if(bool(re.search('[a-zA-Z]', curr[0])) or (bool(re.search('\d', curr[0])) and is_spelling)):
                         result += curr[1]
                     else:
                         result += curr[0]
