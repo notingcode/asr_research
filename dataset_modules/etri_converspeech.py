@@ -16,7 +16,8 @@ _SCRIPTS_FILES_DIR = '전시문_통합_스크립트'
 
 _TRAIN_SCRIPT_FILENAME = 'train'
 _VAL_SCRIPT_FILENAME_CLEAN = 'eval_clean'
-# _VAL_SCRIPT_FILENAME_OTHER = 'eval_other'
+_VAL_SCRIPT_FILENAME_OTHER = 'eval_other'
+
 
 def _get_all_scripts(transcript_filepath, separator):
     new_list = []
@@ -28,7 +29,7 @@ def _get_all_scripts(transcript_filepath, separator):
         return new_list
 
 
-def _unpack_etriSpeech(source_path: str | Path, n_directories_stripped: int = 0):
+def _unpack_speechData(source_path: str | Path, n_directories_stripped: int = 0):
     ext_archive = '.zip'
         
     zip_files = Path(source_path).glob(f"*{ext_archive}")
@@ -43,7 +44,7 @@ def _unpack_etriSpeech(source_path: str | Path, n_directories_stripped: int = 0)
     pool.starmap(_extract_zip, args, chunksize=1)
 
 
-def _get_korConverseSpeech_metadata(
+def _get_etrispeech_metadata(
     file_idx: str, dataset_path: str, ext_audio: str, ext_txt: str,
 ) -> Tuple[str, int, str]:
     
@@ -65,7 +66,7 @@ def _get_korConverseSpeech_metadata(
         if transcript is None:
             # Translation not found
             raise FileNotFoundError(f"Translation not found for {transcript_filepath}")
-
+    
     return (
         audio_filepath,
         SAMPLE_RATE,
@@ -103,8 +104,8 @@ class ETRISPEECH(Dataset):
             
         self.audio_dataset_path = audio_dataset_path
 
-        _unpack_etriSpeech(scripts_dataset_path)
-        _unpack_etriSpeech(audio_dataset_path, n_directories_stripped=1)
+        _unpack_speechData(scripts_dataset_path)
+        _unpack_speechData(audio_dataset_path, n_directories_stripped=1)
         
         scripts_filepath = os.path.join(scripts_dataset_path, scripts_filename)
 
@@ -130,7 +131,7 @@ class ETRISPEECH(Dataset):
                 Transcript
         """
         file_index = self._walker[n]
-        return _get_korConverseSpeech_metadata(file_index, self.dataset_path, self._ext_audio, self._ext_txt)
+        return _get_etrispeech_metadata(file_index, self.dataset_path, self._ext_audio, self._ext_txt)
 
     def __getitem__(self, n: int) -> Tuple[Tensor, int, str]:
         """Load the n-th sample from the dataset.
