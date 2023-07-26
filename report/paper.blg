@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper.aux
+The style file: plain.bst
+Database file #1: ref.bib
+Warning--empty booktitle in cite2
+You've used 7 entries,
+            2118 wiz_defined-function locations,
+            522 strings with 5708 characters,
+and the built_in function-call counts, 3482 in all, are:
+= -- 258
+> -- 381
+< -- 0
++ -- 152
+- -- 144
+* -- 312
+:= -- 629
+add.period$ -- 15
+call.type$ -- 7
+change.case$ -- 93
+chr.to.int$ -- 0
+cite$ -- 8
+duplicate$ -- 55
+empty$ -- 159
+format.name$ -- 144
+if$ -- 647
+int.to.chr$ -- 0
+int.to.str$ -- 7
+missing$ -- 1
+newline$ -- 32
+num.names$ -- 14
+pop$ -- 128
+preamble$ -- 1
+purify$ -- 86
+quote$ -- 0
+skip$ -- 56
+stack$ -- 0
+substring$ -- 36
+swap$ -- 7
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 28
+warning$ -- 1
+while$ -- 14
+width$ -- 8
+write$ -- 59
+(There was 1 warning)

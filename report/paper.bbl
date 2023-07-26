@@ -1,0 +1,45 @@
+\begin{thebibliography}{1}
+
+\bibitem{cite5}
+Anmol Gulati, James Qin, Chung-Cheng Chiu, Niki Parmar, Yu~Zhang, Jiahui Yu,
+  Wei Han, Shibo Wang, Zhengdong Zhang, Yonghui Wu, and Ruoming Pang.
+\newblock Conformer: Convolution-augmented transformer for speech recognition,
+  2020.
+
+\bibitem{cite3}
+Yanzhang He, Tara~N. Sainath, Rohit Prabhavalkar, Ian McGraw, Raziel Alvarez,
+  Ding Zhao, David Rybach, Anjuli Kannan, Yonghui Wu, Ruoming Pang, Qiao Liang,
+  Deepti Bhatia, Yuan Shangguan, Bo~Li, Golan Pundak, Khe~Chai Sim, Tom Bagby,
+  Shuo yiin Chang, Kanishka Rao, and Alexander Gruenstein.
+\newblock Streaming end-to-end speech recognition for mobile devices, 2018.
+
+\bibitem{cite4}
+Shen Li, Yanli Zhao, Rohan Varma, Omkar Salpekar, Pieter Noordhuis, Teng Li,
+  Adam Paszke, Jeff Smith, Brian Vaughan, Pritam Damania, and Soumith Chintala.
+\newblock Pytorch distributed: Experiences on accelerating data parallel
+  training, 2020.
+
+\bibitem{cite1}
+Zhiyun Lu, Yanwei Pan, Thibault Doutre, Parisa Haghani, Liangliang Cao, Rohit
+  Prabhavalkar, Chao Zhang, and Trevor Strohman.
+\newblock Input length matters: Improving rnn-t and mwer training for long-form
+  telephony speech recognition, 2022.
+
+\bibitem{cite2}
+Bob MacDonald, Pan-Pan Jiang, Julie Cattiau, Rus Heywood, Richard Cave, Katie
+  Seaver, Marilyn Ladewig, Jimmy Tobin, Michael Brenner, Philip~Q Nelson,
+  Jordan~R. Green, and Katrin Tomanek.
+\newblock Disordered speech data collection: Lessons learned at 1 million
+  utterances from project euphonia.
+\newblock 2021.
+
+\bibitem{cite7}
+James~O' Neill and Danushka Bollegala.
+\newblock Dropping networks for transfer learning, 2018.
+
+\bibitem{cite6}
+Fuzhen Zhuang, Zhiyuan Qi, Keyu Duan, Dongbo Xi, Yongchun Zhu, Hengshu Zhu, Hui
+  Xiong, and Qing He.
+\newblock A comprehensive survey on transfer learning, 2020.
+
+\end{thebibliography}
